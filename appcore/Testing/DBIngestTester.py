@@ -4,7 +4,7 @@ from appcore.Testing.GitUtilsTester import GitUtilsTester
 
 def dry_run():
     gitutils_dryrun = GitUtilsTester()
-    filetree = gitutils_dryrun.get_sample_filetree()
+    filetree = gitutils_dryrun.get_sample_filetree("Adri-Noir", "iOSMovieApp")
     DBIngestRunner.run_filetree(filetree)
 
 

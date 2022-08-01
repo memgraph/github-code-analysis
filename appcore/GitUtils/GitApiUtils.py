@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, List, Dict
 
 from appcore.GitUtils.GitUtils import GitUtils
 
@@ -18,29 +18,29 @@ class GitApiUtils(GitUtils):
     def __init__(self, access_token=None):
         super().__init__(access_token)
 
-    def get_user_info(self) -> Optional[dict]:
+    def get_user_info(self) -> Optional[Dict]:
         return self._handle_user_api_call(GitApiConstants.user_info_url.value)
 
-    def get_all_user_orgs(self) -> Optional[list[dict]]:
+    def get_all_user_orgs(self) -> Optional[List[Dict]]:
         return self._handle_user_api_call(GitApiConstants.user_orgs_url.value)
 
-    def get_all_user_repos(self) -> Optional[list[dict]]:
+    def get_all_user_repos(self) -> Optional[List[Dict]]:
         return self._handle_user_api_call(GitApiConstants.user_repos_url.value)
 
-    def get_all_repo_branches(self, username: str, repo_name: str) -> Optional[list[dict]]:
+    def get_all_repo_branches(self, username: str, repo_name: str) -> Optional[List[Dict]]:
         return self._handle_user_api_call(GitApiConstants.repo_branches_url_format.value.format(
             username=username,
             repo_name=repo_name,
         ))
 
-    def get_all_commits_for_branch(self, username: str, repo_name: str, branch_sha: str) -> Optional[dict[list]]:
+    def get_all_commits_for_branch(self, username: str, repo_name: str, branch_sha: str) -> Optional[Dict[List]]:
         return self._handle_user_api_call(GitApiConstants.branch_commits_url_format.value.format(
             username=username,
             repo_name=repo_name,
             branch_sha=branch_sha,
         ))
 
-    def check_rate_limit(self) -> Optional[dict]:
+    def check_rate_limit(self) -> Optional[Dict]:
         return self._handle_user_api_call(GitApiConstants.rate_limit_url.value)
 
 

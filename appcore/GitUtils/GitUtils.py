@@ -1,4 +1,4 @@
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
 from requests import get as requests_get
 from json import loads as json_loads
 from lxml import html
@@ -20,7 +20,7 @@ class GitUtils:
             "X-Requested-With": "XMLHttpRequest"
         }
 
-    def _handle_user_api_call(self, url: str) -> Optional[dict]:
+    def _handle_user_api_call(self, url: str) -> Optional[Dict]:
         response = requests_get(
             url=url,
             headers=self._auth_headers
@@ -33,7 +33,7 @@ class GitUtils:
         except ValueError:
             return None
 
-    def _handle_xpath_request(self, url: str, xpath: str) -> Optional[dict]:
+    def _handle_xpath_request(self, url: str, xpath: str) -> Optional[Dict]:
         response = requests_get(
             url=url,
             headers=self._auth_headers_without_accept

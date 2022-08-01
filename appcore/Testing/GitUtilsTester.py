@@ -6,6 +6,10 @@ from appcore.GitUtils.GitFileUtils import GitFileUtils
 
 
 class GitUtilsTester:
+    def __init__(self, access_token: Optional[str] = None):
+        self._git_file_client = GitFileUtils(access_token=access_token)
+        self._git_api_client = GitApiUtils(access_token=access_token)
+
     def get_branch_by_name(self, branches: list[dict], name: str) -> Optional[dict]:
         if len(branches) == 0:
             return
@@ -20,25 +24,24 @@ class GitUtilsTester:
         username, repo, branches = self.get_relevant_data(username=username, repo=repo)
 
         masterbranch = self.get_branch_by_name(branches, "master")
-        git_file_client = GitFileUtils()
-        return git_file_client.get_files_from_downloaded_zip(
+
+        return self._git_file_client.get_files_from_downloaded_zip(
             username=username,
             repo_name=repo,
             commit_sha=masterbranch.get("commit", {}).get("sha", ""),
         )
 
     def get_relevant_data(self, username: Optional[str] = None, repo: Optional[str] = None) -> Tuple[Optional[str], Optional[str], Optional[list[dict]]]:
-        git_api_client = GitApiUtils()
         if username is None:
-            user = git_api_client.get_user_info()
+            user = self._git_api_client.get_user_info()
             if user is None:
                 return None, None, None
             username = user.get("login")
 
-            orgs = git_api_client.get_all_user_orgs()
+            orgs = self._git_api_client.get_all_user_orgs()
 
         if repo is None:
-            repos = git_api_client.get_all_user_repos()
+            repos = self._git_api_client.get_all_user_repos()
 
             if len(repos) > 0:
                 repo = repos[0].get("name")
@@ -46,20 +49,19 @@ class GitUtilsTester:
                     return None, None, None
             else:
                 return None, None, None
-        branches = git_api_client.get_all_repo_branches(username=username, repo_name=repo)
+        branches = self._git_api_client.get_all_repo_branches(username=username, repo_name=repo)
         return username, repo, branches
 
     def dry_run(self) -> None:
         username, repo, branches = self.get_relevant_data()
 
         masterbranch = self.get_branch_by_name(branches, "master")
-        git_file_client = GitFileUtils()
-        files = git_file_client.get_files_from_downloaded_zip(
+        files = self._git_file_client.get_files_from_downloaded_zip(
             username=username,
             repo_name=repo,
             commit_sha=masterbranch.get("commit", {}).get("sha", ""),
         )
-        tree = git_file_client.get_filetree_from_github(
+        tree = self._git_file_client.get_filetree_from_github(
             username=username,
             repo_name=repo,
             commit_sha=masterbranch.get("commit", {}).get("sha", ""),
@@ -67,8 +69,3 @@ class GitUtilsTester:
         print(username, repo, masterbranch, sep="\n")
         print(files)
         print(tree)
-
-
-if __name__ == "__main__":
-    dry_run = GitUtilsTester()
-    dry_run.dry_run()

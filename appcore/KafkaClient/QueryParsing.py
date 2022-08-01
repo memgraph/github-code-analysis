@@ -13,5 +13,3 @@ class QueryParsing:
             query_response_impl.query_response(data)
         else:
             logging.error(f"Query type {query_type} is not recognized.")
-
-        return

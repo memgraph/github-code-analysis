@@ -2,11 +2,12 @@ from appcore.KafkaClient.QueryResponseInterface import QueryResponseInterface
 from appcore.DatabaseIngest.DBIngestRunner import DBIngestRunner
 from appcore.GitUtils.GitFileUtils import GitFileUtils
 import logging
+from typing import Dict
 
 
-class DownloadAndGenEverything(QueryResponseInterface):
+class AllRepositoryInformation(QueryResponseInterface):
     @staticmethod
-    def query_response(query: dict) -> None:
+    def query_response(query: Dict) -> None:
         username = query.get("username")
         repo_name = query.get("repo_name")
         commit_sha = query.get("commit_sha")
@@ -24,5 +25,3 @@ class DownloadAndGenEverything(QueryResponseInterface):
         )
         DBIngestRunner.run_filetree(filetree=filetree)
         DBIngestRunner.run_branches_and_commits()
-
-        return

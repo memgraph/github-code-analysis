@@ -1,3 +1,4 @@
+from typing import List
 from appcore.DatabaseIngest.DBIngestImpls.FileTreeGraphCreator import FileTreeCreator
 from appcore.DatabaseIngest.DBIngestImpls.RepoBranchesAndCommitsGraphCreator import RepoBranchesAndCommitsCreator
 from appcore.DatabaseIngest.DBIngestImpls.DependencyGraphCreator import DependencyGraphCreator
@@ -6,11 +7,11 @@ from enum import Enum
 
 
 class DBIngestImplsList(Enum):
-    filetree_impls_list: [DBIngestInterface] = [
+    filetree_impls_list: List[DBIngestInterface] = [
         FileTreeCreator,
         DependencyGraphCreator,
     ]
 
-    commits_impls_list: [DBIngestInterface] = [
+    commits_impls_list: List[DBIngestInterface] = [
         RepoBranchesAndCommitsCreator,
     ]

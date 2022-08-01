@@ -1,6 +1,7 @@
 from zipfile import ZipFile, ZipInfo
 from enum import Enum
 from appcore.GitUtils.GitUtils import GitUtils
+from typing import List
 
 
 class GitFileConstants(Enum):
@@ -15,7 +16,7 @@ class GitFileUtils(GitUtils):
     def __init__(self, access_token=None):
         super().__init__(access_token)
 
-    def get_filetree_from_github(self, username: str, repo_name: str, commit_sha: str) -> list:
+    def get_filetree_from_github(self, username: str, repo_name: str, commit_sha: str) -> List:
         return self._handle_xpath_request(GitFileConstants.github_filetree_url_format.value.format(
             username=username,
             repo_name=repo_name,
@@ -25,17 +26,20 @@ class GitFileUtils(GitUtils):
     def get_files_from_api(self, username: str, repo_name: str, commit_sha: str):  # Maybe there is no point doing this
         pass
 
-    def get_files_from_downloaded_zip(self, username: str, repo_name: str, commit_sha: str) -> list[ZipInfo]:
+    def get_files_from_downloaded_zip(self, username: str, repo_name: str, commit_sha: str) -> List[ZipInfo]:
         response_content, response_headers = self._handle_raw_api_call(
             GitFileConstants.repo_download_url_format.value.format(
                 username=username,
                 repo_name=repo_name,
                 commit_sha=commit_sha,
             ))
+
         filename = dict(response_headers).get("content-disposition").split("; ")[-1].replace("filename=", "")
         open(GitFileConstants.repo_download_filepath.value.format(filename=filename), "wb").write(response_content)
-        filetree: [ZipInfo] = []
+
+        filetree: List[ZipInfo] = []
         with ZipFile(GitFileConstants.repo_download_filepath.value.format(filename=filename), "r") as zipf:
             zipf.extractall(GitFileConstants.repo_download_extraction_filepath.value)
             filetree = zipf.filelist
+            
         return filetree

@@ -40,7 +40,7 @@ services:
 
   memgraph-platform:
     container_name: "memgraph"
-    image: "memgraph/memgraph-platform"
+    build: "./memgraph"
     ports:
       - "7687:7687"
       - "3000:3000"
@@ -48,7 +48,7 @@ services:
     depends_on:
       - broker
     environment:
-      - MEMGRAPH="--log-level=TRACE"
+      - MEMGRAPH="--log-level=TRACE --telemetry-enabled=false"
     entrypoint: [
         "/usr/bin/supervisord"
     ]
@@ -60,10 +60,35 @@ services:
     container_name: appcore
     volumes:
       - ./appcore:/usr/src/appcore
-    entrypoint: python3 appcore/KafkaClient/CoreKafkaConsumer.py
+    entrypoint: python3 appcore/setup.py
     networks:
       - git-network
     depends_on:
       - broker
       - zookeeper
       - memgraph-platform
+    
+  frontend:
+    build: "./frontend"
+    container_name: frontend
+    volumes:
+      - ./frontend/pages:/app/pages
+      - ./frontend/public:/app/public
+      - ./frontend/styles:/app/styles
+      - ./frontend/comps:/app/comps
+    ports:
+      - 3001:3000
+    networks:
+      - git-network
+    depends_on:
+      - core
+  
+  backend:
+    build: "./backend"
+    container_name: "backend"
+    volumes:
+      - ./backend:/app
+    ports:
+      - 5000:5000
+    networks:
+      - git-network
