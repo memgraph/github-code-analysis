@@ -543,4 +543,6 @@ sketch
 # Ignore code-workspaces
 *.code-workspace
 
+log.txt
+
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm,node,nextjs,react,flask,visualstudiocode
