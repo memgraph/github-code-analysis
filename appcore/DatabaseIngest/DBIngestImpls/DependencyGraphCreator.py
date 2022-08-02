@@ -4,5 +4,5 @@ from typing import List
 
 
 class DependencyGraphCreator(DBIngestInterface):
-    def create_db_objects(self, data: List[ZipInfo]):
+    def run(self, data: List[ZipInfo]):
         pass

@@ -18,7 +18,7 @@ class AllRepositoryInformation(QueryResponseInterface):
             return
 
         git_file_utils = GitFileUtils(access_token=access_token)
-        filetree = git_file_utils.get_files_from_downloaded_zip(
+        filename, filetree = git_file_utils.get_files_from_downloaded_zip(
             username=username,
             repo_name=repo_name,
             commit_sha=commit_sha,

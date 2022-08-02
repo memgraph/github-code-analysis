@@ -1,8 +1,6 @@
 from appcore.KafkaClient.CoreKafkaConstants import CoreKafkaConstants
 from appcore.KafkaClient.QueryParsing import QueryParsing
 from kafka import KafkaConsumer
-from time import sleep
-import logging
 from multiprocessing import Process
 
 
@@ -15,7 +13,7 @@ class CoreKafkaConsumer:
             auto_offset_reset="latest"
         )
         consumer.subscribe([CoreKafkaConstants.KAFKA_CONSUMER_TOPIC_NAME.value])
-        for message in consumer:  # Error handling is missing
+        for message in consumer:
             QueryParsing.recognize(message.value)
             # Process(target=QueryParsing.recognize, args=(message.value,)).start()
         consumer.close()

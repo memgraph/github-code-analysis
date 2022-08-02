@@ -4,5 +4,5 @@ from typing import Any
 
 class DBIngestInterface(ABC):
     @abstractmethod
-    def create_db_objects(self, data: Any) -> None:
+    def run(self, data: Any) -> None:
         pass

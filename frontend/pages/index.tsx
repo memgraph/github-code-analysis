@@ -45,12 +45,14 @@ const Index: NextPage = () => {
   const [user, setUser] = useState("");
   const [repo, setRepo] = useState("");
   const [commitSha, setCommitSha] = useState("");
+  const [accessToken, setAccessToken] = useState("");
 
   const handleAPIRequest = async () => {
     var bodyFormData = new FormData();
     bodyFormData.append('user', user);
     bodyFormData.append('repo', repo);
     bodyFormData.append('commit_hash', commitSha);
+    bodyFormData.append('access_token', accessToken);
 
     const result = await axios({
       method: "POST",
@@ -68,7 +70,6 @@ const Index: NextPage = () => {
     handleAPIRequest();
   }
 
-  
 
   return (
     <>
@@ -96,10 +97,18 @@ const Index: NextPage = () => {
           </Grid>
           <Grid item lg={5} md={5} sm={5} xs={5}>
               <TextField
-                name="commit"
+                name="commit_hash"
                 id="outlined"
                 label="Commit hash"
                 onChange={(e) => setCommitSha(e.target.value)}
+              />
+          </Grid>
+          <Grid item lg={5} md={5} sm={5} xs={5}>
+              <TextField
+                name="access_token"
+                id="outlined"
+                label="Access token"
+                onChange={(e) => setAccessToken(e.target.value)}
               />
           </Grid>
           <Grid item lg={5} md={5} sm={5} xs={5}>

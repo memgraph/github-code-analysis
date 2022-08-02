@@ -1,7 +1,9 @@
 from enum import Enum
 from typing import Optional, List, Dict
-
-from appcore.GitUtils.GitUtils import GitUtils
+from requests import get as requests_get
+from backend.GitBackendUtils.GitApiExceptions import GitApiLimit, GitApiResponseParsingError, GitApiUnknownStatusCode
+import logging
+from json import loads as json_loads
 
 
 class GitApiConstants(Enum):
@@ -14,9 +16,40 @@ class GitApiConstants(Enum):
     rate_limit_url: str = "https://api.github.com/rate_limit"
 
 
-class GitApiUtils(GitUtils):
+class GitApiUtils:
     def __init__(self, access_token=None):
-        super().__init__(access_token)
+        self._access_token = access_token
+        self._auth_headers = {
+            "Authorization": "token " + access_token,
+            "Accept": "application/vnd.github.v3+json"
+        }
+
+    def _check_user_api_limit(self):
+        pass
+
+    def _handle_api_limit(self):
+        logging.warning("User API limit reached.")
+        raise GitApiLimit  # Missing database sync for storing user timeout
+    
+    def _handle_user_api_call(self, url: str) -> Optional[Dict]:
+        self._check_user_api_limit()
+        response = requests_get(
+            url=url,
+            headers=self._auth_headers
+        )
+
+        if response.status_code == 429:
+            self._handle_api_limit()
+
+        if response.status_code != 200:  # Missing API limits handler and paging
+            logging.warning("Unknown status code: %s", response.status_code)
+            raise GitApiUnknownStatusCode
+
+        try:
+            return json_loads(response.content)
+        except ValueError:
+            logging.warning("Error while parsing json response.")
+            raise GitApiResponseParsingError
 
     def get_user_info(self) -> Optional[Dict]:
         return self._handle_user_api_call(GitApiConstants.user_info_url.value)
@@ -33,7 +66,7 @@ class GitApiUtils(GitUtils):
             repo_name=repo_name,
         ))
 
-    def get_all_commits_for_branch(self, username: str, repo_name: str, branch_sha: str) -> Optional[Dict[List]]:
+    def get_all_commits_for_branch(self, username: str, repo_name: str, branch_sha: str) -> Optional[List[Dict]]:
         return self._handle_user_api_call(GitApiConstants.branch_commits_url_format.value.format(
             username=username,
             repo_name=repo_name,

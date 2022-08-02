@@ -6,14 +6,13 @@ import logging
 
 
 def setup():
-    sleep(4)
     SetupKafka.run()
-    sleep(10)
+    sleep(5)
     SetupMemgraph.run()
-    sleep(2)
-    logging.basicConfig(filename="/usr/src/appcore/Log/logfile.txt", # This needs to be a constant
+    logging.basicConfig(filename="/usr/src/appcore/Log/log.txt", # This needs to be a constant
                         level=logging.DEBUG,
                         format="%(asctime)s:%(levelname)s:%(name)s:%(message)s")
+    logging.getLogger("kafka").setLevel(logging.WARNING)
     logging.info("Core is ready")
     CoreKafkaConsumer.run()
 

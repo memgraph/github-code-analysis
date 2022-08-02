@@ -34,6 +34,6 @@ class FileTreeCreator(DBIngestInterface):
                 "after": after,
                 "link_after": link_after}
 
-    def create_db_objects(self, data: List[ZipInfo]) -> None:
+    def run(self, data: List[ZipInfo]) -> None:
         for file in data:
             self._kafka_producer.produce_db_objects({"type": "filetree", "data": self.extract_files(file)})

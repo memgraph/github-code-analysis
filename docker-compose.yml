@@ -87,7 +87,7 @@ services:
     build: "./backend"
     container_name: "backend"
     volumes:
-      - ./backend:/app
+      - ./backend:/usr/src/backend
     ports:
       - 5000:5000
     networks:

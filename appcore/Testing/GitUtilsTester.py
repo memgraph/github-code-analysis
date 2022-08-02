@@ -1,14 +1,12 @@
 from typing import Optional, Tuple
 from zipfile import ZipInfo
 
-from appcore.GitUtils.GitApiUtils import GitApiUtils
 from appcore.GitUtils.GitFileUtils import GitFileUtils
 
 
 class GitUtilsTester:
     def __init__(self, access_token: Optional[str] = None):
         self._git_file_client = GitFileUtils(access_token=access_token)
-        self._git_api_client = GitApiUtils(access_token=access_token)
 
     def get_branch_by_name(self, branches: list[dict], name: str) -> Optional[dict]:
         if len(branches) == 0:
@@ -20,52 +18,26 @@ class GitUtilsTester:
 
         return selected
 
-    def get_sample_filetree(self, username: Optional[str] = None, repo: Optional[str] = None) -> Optional[list[ZipInfo]]:
-        username, repo, branches = self.get_relevant_data(username=username, repo=repo)
-
-        masterbranch = self.get_branch_by_name(branches, "master")
-
+    def get_sample_filetree(self, username: str, repo: str, commit_hash: str) -> Optional[list[ZipInfo]]:
         return self._git_file_client.get_files_from_downloaded_zip(
             username=username,
             repo_name=repo,
-            commit_sha=masterbranch.get("commit", {}).get("sha", ""),
+            commit_sha=commit_hash,
         )
 
-    def get_relevant_data(self, username: Optional[str] = None, repo: Optional[str] = None) -> Tuple[Optional[str], Optional[str], Optional[list[dict]]]:
-        if username is None:
-            user = self._git_api_client.get_user_info()
-            if user is None:
-                return None, None, None
-            username = user.get("login")
-
-            orgs = self._git_api_client.get_all_user_orgs()
-
-        if repo is None:
-            repos = self._git_api_client.get_all_user_repos()
-
-            if len(repos) > 0:
-                repo = repos[0].get("name")
-                if repo is None:
-                    return None, None, None
-            else:
-                return None, None, None
-        branches = self._git_api_client.get_all_repo_branches(username=username, repo_name=repo)
-        return username, repo, branches
-
     def dry_run(self) -> None:
-        username, repo, branches = self.get_relevant_data()
+        username, repo, branch = "Adri-Noir", "iOSMovieApp", "03640357b92c3342be5902e1b153b992f9618f1d"
 
-        masterbranch = self.get_branch_by_name(branches, "master")
         files = self._git_file_client.get_files_from_downloaded_zip(
             username=username,
             repo_name=repo,
-            commit_sha=masterbranch.get("commit", {}).get("sha", ""),
+            commit_sha=branch,
         )
         tree = self._git_file_client.get_filetree_from_github(
             username=username,
             repo_name=repo,
-            commit_sha=masterbranch.get("commit", {}).get("sha", ""),
+            commit_sha=branch,
         )
-        print(username, repo, masterbranch, sep="\n")
+        print(username, repo, branch, sep="\n")
         print(files)
         print(tree)
