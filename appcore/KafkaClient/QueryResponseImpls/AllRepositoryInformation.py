@@ -25,3 +25,4 @@ class AllRepositoryInformation(QueryResponseInterface):
         )
         DBIngestRunner.run_filetree(filetree=filetree)
         DBIngestRunner.run_branches_and_commits()
+        DBIngestRunner.run_finishing_methods(filename=filename, filetree=filetree[0].filename)
