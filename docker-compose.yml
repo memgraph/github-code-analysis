@@ -1,0 +1,94 @@
+---
+version: '3'
+
+
+networks:
+  git-network:
+    driver: bridge
+
+services:
+  zookeeper:
+    image: "bitnami/zookeeper:3.7"
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - git-network
+
+  broker:
+    image: "bitnami/kafka:2"
+    container_name: broker
+    logging:
+      driver: none
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      - KAFKA_BROKER_ID=1
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://broker:9092,EXTERNAL://localhost:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=CLIENT
+    depends_on:
+      - zookeeper
+    networks:
+      - git-network
+
+  memgraph-platform:
+    container_name: "memgraph"
+    build: "./memgraph"
+    ports:
+      - "7687:7687"
+      - "3000:3000"
+      - "7444:7444"
+    depends_on:
+      - broker
+    environment:
+      - MEMGRAPH="--log-level=TRACE --telemetry-enabled=false"
+    entrypoint: [
+        "/usr/bin/supervisord"
+    ]
+    networks:
+      - git-network
+  
+  core:
+    build: "./appcore"
+    container_name: appcore
+    volumes:
+      - ./appcore:/usr/src/appcore
+    entrypoint: python3 appcore/setup.py
+    networks:
+      - git-network
+    depends_on:
+      - broker
+      - zookeeper
+      - memgraph-platform
+    
+  frontend:
+    build: "./frontend"
+    container_name: frontend
+    volumes:
+      - ./frontend/pages:/app/pages
+      - ./frontend/public:/app/public
+      - ./frontend/styles:/app/styles
+      - ./frontend/comps:/app/comps
+    ports:
+      - 3001:3000
+    networks:
+      - git-network
+    depends_on:
+      - core
+  
+  backend:
+    build: "./backend"
+    container_name: "backend"
+    volumes:
+      - ./backend:/usr/src/backend
+    ports:
+      - 5000:5000
+    networks:
+      - git-network
