@@ -10,6 +10,7 @@ class GitApiConstants(Enum):
     user_info_url: str = "https://api.github.com/user"
     user_repos_url: str = "https://api.github.com/user/repos?per_page=100"
     user_orgs_url: str = "https://api.github.com/user/orgs?per_page=100"
+    user_starred_repos_url: str = "https://api.github.com/user/starred?per_page=100"
     repo_branches_url_format: str = "https://api.github.com/repos/{username}/{repo_name}/branches?per_page=100"
     branch_commits_url_format: str = "https://api.github.com/repos/{username}/{repo_name}/commits?sha={" \
                                      "branch_sha}&per_page=100 "
@@ -72,6 +73,9 @@ class GitApiUtils:
             repo_name=repo_name,
             branch_sha=branch_sha,
         ))
+
+    def get_all_starred_repos(self) -> Optional[List[Dict]]:
+        return self._handle_user_api_call(GitApiConstants.user_starred_repos_url.value)
 
     def check_rate_limit(self) -> Optional[Dict]:
         return self._handle_user_api_call(GitApiConstants.rate_limit_url.value)

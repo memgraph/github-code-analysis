@@ -1,8 +1,10 @@
 import type { NextPage } from 'next';
 import { Button, Container, Grid, TextField, Typography } from '@mui/material';
-import React, { FormEvent, useState } from 'react';
+import React, { FormEvent, useState, useEffect } from 'react';
 import axios from 'axios';
 import FileTree from '../comps/FileTree';
+import { useSession, signIn } from 'next-auth/react';
+import NavBar from '../comps/NavBar';
 
 const orgChart = {
   name: 'CEO',
@@ -46,6 +48,20 @@ const Graph: NextPage = () => {
   const [repo, setRepo] = useState("");
   const [commitSha, setCommitSha] = useState("");
   const [accessToken, setAccessToken] = useState("");
+
+  const session = useSession();
+
+
+  useEffect(() => {
+    if (session.status === "unauthenticated") {
+      signIn();
+    }
+
+    if (session.status === "authenticated") {
+      setUser(session.data.login as string);
+      setAccessToken(session.data.accessToken as string);
+    }
+  } , [session]);
 
   const handleAPIRequest = async () => {
     var bodyFormData = new FormData();

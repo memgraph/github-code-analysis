@@ -59,6 +59,20 @@ def run_repo_parser():
         )), status=200)
 
 
+@app.route("/repos", methods=['POST'])
+def get_all_user_repos():
+    if not(request.form['access_token']):
+        return Response(status=401)
+
+    git_api_utils = GitApiUtils(request.form['access_token'])
+    repos = git_api_utils.get_all_user_repos()
+    important_repo_data = list(map(lambda x: {"name": x.get("name", ""), "full_name": x.get("full_name", ""), "public": x.get("visibility", "public") == "public"}, repos))
+    starred_repos = git_api_utils.get_all_starred_repos()
+    important_starred_repo_data = list(map(lambda x: {"name": x.get("name", ""), "full_name": x.get("full_name", ""), "public": x.get("visibility", "public") == "public"}, starred_repos))
+
+    return Response(json.dumps({"repos": important_repo_data, "starred": important_starred_repo_data}), status=200)
+
+
 if __name__ == '__main__':
     logging.info("Backend is ready.")
     app.run(debug = True, host="127.0.0.1", port="5000")

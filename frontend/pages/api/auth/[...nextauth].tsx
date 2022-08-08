@@ -47,10 +47,12 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
 
 
 export default NextAuth({
+    secret: process.env.AUTH_SECRET,
     providers: [
         GithubProvider({
             clientId: process.env.GITHUB_CLIENT_ID as string,
             clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
+            authorization: { params: { scope: 'repo read:org read:packages read:project read:repo_hook read:user' } },
         })
     ],
     session: { strategy: "jwt" },
@@ -61,7 +63,8 @@ export default NextAuth({
                   access_token: account.access_token as string,
                   access_token_expires: (account.expires_at ?? ((Date.now() + 8 * 3600 * 1000)/1000) * 1000) as Number,
                   refresh_token: account.refresh_token as string,
-                  login: profile.login as string
+                  login: profile.login as string,
+                  avatar_url: profile.avatar_url as string,
                 }
             }
             
@@ -79,6 +82,7 @@ export default NextAuth({
             if (session && params.token && params.token.access_token) {
                 session.login = params.token.login;
                 session.access_token = params.token.access_token;
+                session.avatar_url = params.token.avatar_url;
             }
             return session;
         }
