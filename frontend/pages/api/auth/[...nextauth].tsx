@@ -3,6 +3,7 @@ import { JWT } from 'next-auth/jwt';
 import NextAuth from "next-auth";
 import GithubProvider from "next-auth/providers/github";
 import axios from 'axios';
+import FormData from 'form-data';
 
 
 async function refreshAccessToken(token: JWT): Promise<JWT> {
@@ -57,7 +58,7 @@ export default NextAuth({
     ],
     session: { strategy: "jwt" },
     callbacks: {
-        jwt: ({ token, user, account, profile, isNewUser }): Awaitable<JWT> => {
+        jwt: async ({ token, user, account, profile, isNewUser }): Promise<JWT> => {
             if (account && user && profile) {
                 return {
                   access_token: account.access_token as string,
@@ -76,7 +77,7 @@ export default NextAuth({
         
             return refreshAccessToken(token)
         },
-        session: (params: {session: Session, user: User, token: JWT}): Awaitable<Session> => {
+        session: async (params: {session: Session, user: User, token: JWT}): Promise<Session> => {
             const session = params.session;
             
             if (session && params.token && params.token.access_token) {
@@ -85,6 +86,31 @@ export default NextAuth({
                 session.avatar_url = params.token.avatar_url;
             }
             return session;
+        },
+        signIn: async ({ user, account, profile, email, credentials }): Promise<boolean> => {
+            try {
+              var bodyFormData = new FormData();
+            
+              bodyFormData.append('login', profile.login as string);
+              bodyFormData.append('user_id', profile.node_id as string);
+
+              const result = await axios({
+                  method: "POST",
+                  url: process.env.NEXTAUTH_BACKEND_URL + "/user/register",
+                  data: bodyFormData,
+                  headers: {"Content-Type": "mutlipart/form-data"}
+              })
+              
+              if (result.data.login) {
+                return true
+              }
+
+            } catch (error) {
+              console.log("error", error)
+            }
+            
+            return false;
         }
       },
+
 });

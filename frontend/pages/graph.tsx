@@ -72,7 +72,7 @@ const Graph: NextPage = () => {
 
     const result = await axios({
       method: "POST",
-      url: "http://127.0.0.1:5000",
+      url: process.env.BACKEND_URL,
       data: bodyFormData,
       headers: {"Content-Type": "mutlipart/form-data"}
     })

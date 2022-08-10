@@ -76,6 +76,7 @@ services:
       - ./frontend/public:/app/public
       - ./frontend/styles:/app/styles
       - ./frontend/comps:/app/comps
+      - ./frontend/next.config.js:/app/next.config.js
     ports:
       - 3001:3000
     networks:

@@ -1,21 +1,20 @@
 import { AppBar, Box, Typography, Container, Toolbar, Menu, MenuItem, Button, IconButton, Tooltip, Avatar, Grid } from "@mui/material";
 import MenuIcon from '@mui/icons-material/Menu';
 import GitHubIcon from '@mui/icons-material/GitHub';
-
 import { useState } from "react";
-
 import { useSession, signIn, signOut } from "next-auth/react";
-
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 
-const pages = [ {title: "User", link: "/user", authenticated: true}, 
-                {title: "Graph", link: "/graph", authenticated: true}, 
+const pages = [ {title: "Repositories", link: "/repos", authenticated: true}, 
+                {title: "Search", link: "/search", authenticated: true}, 
                 {title: "About", link: "/about", authenticated: false}];
 
 
 const NavBar = () => {
     const session = useSession();
+    const router = useRouter();
 
     const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
 
@@ -23,7 +22,7 @@ const NavBar = () => {
         setAnchorElNav(event.currentTarget);
     };
     const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-        signOut();
+        signOut({redirect: true, callbackUrl: "/"});
     };
 
     const handleCloseNavMenu = () => {
@@ -115,9 +114,11 @@ const NavBar = () => {
                     }}
                     >
                     {showPages.map((page) => (
-                        <MenuItem key={page.title} onClick={handleCloseNavMenu}>
-                        <Typography textAlign="center">{page.title}</Typography>
-                        </MenuItem>
+                        <Link key={page.title} href={page.link}>
+                            <MenuItem key={page.title} onClick={handleCloseNavMenu}>
+                            <Typography textAlign="center">{page.title}</Typography>
+                            </MenuItem>
+                        </Link>
                     ))}
                     </Menu>
                 </Box>
@@ -155,7 +156,7 @@ const NavBar = () => {
                 </Box>
 
                 <Box sx={{ flexGrow: 0, mt: "3px", mb: "3px" }}>
-                    {session.status === "authenticated" ? loggedInMenu : <Button variant="contained" color="info" onClick={() => {signIn()}}>Login</Button>}
+                    {session.status === "authenticated" ? loggedInMenu : <Button variant="outlined" color="inherit" onClick={() => {signIn()}}>Login</Button>}
                 </Box>
                 </Toolbar>
             </Container>

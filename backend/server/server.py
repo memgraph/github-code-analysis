@@ -8,6 +8,7 @@ from backend.server.ServerConstants import ServerConstants
 from kafka.errors import NoBrokersAvailable
 import logging
 from time import sleep
+from datetime import datetime
 
 
 logging.basicConfig(filename=ServerConstants.LOGGING_FILE_PATH.value,
@@ -35,6 +36,20 @@ def get_rate_limit(access_token: str):
     return git_api_utils.check_rate_limit().get("rate").get("remaining")
 
 
+@app.route("/trending_repos", methods=["GET"])
+def get_trending_repos():
+    git_api_utils = GitApiUtils()
+    repos = git_api_utils.get_trending_repos()
+    return Response(json.dumps(list(map(get_important_repo_data, repos))), mimetype="application/json")
+
+
+@app.route("/user/register", methods=['POST'])
+def register_user():
+    if not(request.form.get('login') and request.form.get('user_id')):
+        return Response(status=401)
+    return Response(json.dumps({"login": True}), status=200)
+
+
 @app.route("/", methods=['POST'])
 def run_repo_parser():
     if not(request.form['user'] and request.form['repo'] and request.form['commit_hash'] and request.form['access_token']):
@@ -59,16 +74,31 @@ def run_repo_parser():
         )), status=200)
 
 
+def get_important_repo_data(repo_data: dict):
+    date_time_obj = datetime.strptime(repo_data.get("updated_at"), '%Y-%m-%dT%H:%M:%SZ')
+    git_api_utils = GitApiUtils(request.form['access_token'])
+    languages = list(git_api_utils.get_repo_languages(repo_data.get("full_name")).keys())
+    return {"name": repo_data.get("name", ""), 
+            "full_name": repo_data.get("full_name", ""), 
+            "public": repo_data.get("visibility", "public") == "public", 
+            "updated_at": date_time_obj.strftime("%d %b, %Y"), 
+            "languages": languages,
+            "github_url": repo_data.get("html_url"),}
+
+
 @app.route("/repos", methods=['POST'])
 def get_all_user_repos():
-    if not(request.form['access_token']):
+    if not(request.form.get('access_token')):
         return Response(status=401)
+    
+    if get_rate_limit(request.form['access_token']) < 2:
+        return Response(status=429)
 
     git_api_utils = GitApiUtils(request.form['access_token'])
     repos = git_api_utils.get_all_user_repos()
-    important_repo_data = list(map(lambda x: {"name": x.get("name", ""), "full_name": x.get("full_name", ""), "public": x.get("visibility", "public") == "public"}, repos))
+    important_repo_data = list(map(get_important_repo_data, repos))
     starred_repos = git_api_utils.get_all_starred_repos()
-    important_starred_repo_data = list(map(lambda x: {"name": x.get("name", ""), "full_name": x.get("full_name", ""), "public": x.get("visibility", "public") == "public"}, starred_repos))
+    important_starred_repo_data = list(map(get_important_repo_data, starred_repos))
 
     return Response(json.dumps({"repos": important_repo_data, "starred": important_starred_repo_data}), status=200)
 
