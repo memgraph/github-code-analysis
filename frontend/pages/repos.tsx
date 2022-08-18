@@ -3,13 +3,15 @@ import { useRouter } from "next/router";
 import { useSession, signIn } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { Zoom, Grow, Box, List, ListItem, ListItemAvatar, Avatar, ListItemText, Grid, Paper, Divider, Typography, Chip, Backdrop, CircularProgress, IconButton, ButtonGroup, Snackbar, Alert, Input, InputLabel, InputAdornment } from "@mui/material";
+import { Zoom, Grow, Box, List, ListItem, ListItemAvatar, Avatar, ListItemText, Grid, Paper, Divider, Typography, Chip, Backdrop, CircularProgress, IconButton, ButtonGroup, Snackbar, Alert, Input, InputLabel, InputAdornment, ListItemIcon } from "@mui/material";
+import LoadingButton  from "@mui/lab/LoadingButton";
 import PublicIcon from '@mui/icons-material/Public';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import StarIcon from '@mui/icons-material/Star';
 import SearchIcon from '@mui/icons-material/Search';
 import PersonIcon from '@mui/icons-material/Person';
 import GitHubIcon from '@mui/icons-material/GitHub';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import React from "react";
 
 
@@ -32,6 +34,8 @@ const Repos: NextPage = () => {
     const [searchData, setSearchData] = useState<Repo[]>([]);
     const [open, setOpen] = useState(true);
     const [snackOpen, setSnackOpen] = useState(false);
+    const [refreshLoading, setRefreshLoading] = useState(false);
+
     const oncePerLoad = useRef(false)
 
     const [filter, setFilter] = useState([true, false, false, false])
@@ -90,6 +94,7 @@ const Repos: NextPage = () => {
             const getUserRepos = async () => {
                 var bodyFormData = new FormData();
                 bodyFormData.append('access_token', session.data.access_token as string);
+                bodyFormData.append('login', session.data.login as string);
 
                 try {
                     const result = await axios({
@@ -101,6 +106,7 @@ const Repos: NextPage = () => {
 
                     console.log(result)
                     setOpen(false);
+                    setRefreshLoading(false);
     
                     if (result.status === 200) {
                         setData(result.data.repos)
@@ -114,6 +120,7 @@ const Repos: NextPage = () => {
                 } catch {
                     setOpen(false)
                     setSnackOpen(true)
+                    setRefreshLoading(false);
                     return                     
                 }
             }
@@ -125,6 +132,48 @@ const Repos: NextPage = () => {
         }
     }, [session]);
 
+
+    const refresh = () => {
+        if (session.status === "authenticated") {
+            setRefreshLoading(true)
+            const getUserRepos = async () => {
+                var bodyFormData = new FormData();
+                bodyFormData.append('access_token', session.data.access_token as string);
+                bodyFormData.append('login', session.data.login as string);
+
+                try {
+                    const result = await axios({
+                        method: "POST",
+                        url: process.env.BACKEND_URL+"/refresh_repos",
+                        data: bodyFormData,
+                        headers: {"Content-Type": "mutlipart/form-data"}
+                    })
+
+                    console.log(result)
+                    setOpen(false);
+                    setRefreshLoading(false)
+        
+                    if (result.status === 200) {
+                        setData(result.data.repos)
+                        setSearchData(result.data.repos)
+                        setRepos(result.data.repos)
+                        setStarredRepos(result.data.starred)
+                    } else {
+                        setSnackOpen(true)
+                    }
+
+                } catch {
+                    setRefreshLoading(true)
+                    setOpen(false)
+                    setSnackOpen(true)
+                    return                     
+                }
+            }
+
+            getUserRepos()
+        }
+    }
+
     return (
         <>
             <Backdrop
@@ -133,8 +182,8 @@ const Repos: NextPage = () => {
                 <CircularProgress color="inherit" />
             </Backdrop>
 
-            <Snackbar open={snackOpen} autoHideDuration={5000}>
-                <Alert severity="error">An error occured while getting repository data!</Alert>
+            <Snackbar open={snackOpen} autoHideDuration={5000} onClose={() => setSnackOpen(false)}>
+                <Alert severity="error">An error occurred while getting repository data!</Alert>
             </Snackbar>
 
             <Grow in={!open}>
@@ -179,6 +228,15 @@ const Repos: NextPage = () => {
                     <Grid item lg={6} md={8} sm={10} xs={11}>
                         <Paper elevation={2}>
                             <List sx={{ maxHeight: "70vh", overflow: "auto", width: '100%', bgcolor: 'white', pt: "0", pb: "0" }}>
+                                <ListItem button onClick={() => refresh()}>
+                                    <Grid container justifyContent={"center"} alignContent={"center"}>
+                                        <Grid item lg={6} md={6} sm={6} xs={6}>
+                                            <Box textAlign={"center"}><LoadingButton disableRipple sx={{backgroundColor: "transparent", "&.MuiButtonBase-root:hover": {bgcolor: "transparent"}}} color="inherit" size="large" loading={refreshLoading} variant="text"> <RefreshIcon /> </LoadingButton></Box>
+                                            
+                                        </Grid>
+                                    </Grid>
+                                        
+                                </ListItem>
                                 {data.map((repo, index) => (
                                     <React.Fragment key={index}>
                                         <ListItem button secondaryAction={

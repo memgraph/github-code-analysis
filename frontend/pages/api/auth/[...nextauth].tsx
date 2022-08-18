@@ -18,24 +18,24 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
             })
         
         const response = await axios.post(url);
-  
-      if (response.data && response.data.includes("error")) {
-        throw response.data
-      }
 
-      const refresh_data: { [key: string]: string } = {}
+        if (response.data && response.data.includes("error")) {
+          throw response.data
+        }
 
-      response.data.split("&").forEach((element: string) => {
-        const [key, value] = element.split("=");
-        refresh_data[key] = value;
-      })
-  
-      return {
-        ...token,
-        access_token: refresh_data.access_token,
-        access_token_expires: Date.now() + parseInt(refresh_data.expires_in) * 1000 as Number,
-        refresh_token: refresh_data.refresh_token ?? token.refreshToken,
-      }
+        const refresh_data: { [key: string]: string } = {}
+
+        response.data.split("&").forEach((element: string) => {
+          const [key, value] = element.split("=");
+          refresh_data[key] = value;
+        })
+    
+        return {
+          ...token,
+          access_token: refresh_data.access_token,
+          access_token_expires: Date.now() + parseInt(refresh_data.expires_in) * 1000 as Number,
+          refresh_token: refresh_data.refresh_token ?? token.refresh_token,
+        }
     } catch (error) {
       console.log("error", error)
   
@@ -59,7 +59,7 @@ export default NextAuth({
     session: { strategy: "jwt" },
     callbacks: {
         jwt: async ({ token, user, account, profile, isNewUser }): Promise<JWT> => {
-            if (account && user && profile) {
+            if (account && profile) {
                 return {
                   access_token: account.access_token as string,
                   access_token_expires: (account.expires_at ?? ((Date.now() + 8 * 3600 * 1000)/1000) * 1000) as Number,
@@ -70,7 +70,7 @@ export default NextAuth({
             }
             
             if (token.access_token_expires) {
-                if (Date.now() < (token.access_token_expires as Number)) {
+                if (Date.now() / 1000 < (token.access_token_expires as Number)) {
                     return token
                 }
             }
@@ -90,9 +90,9 @@ export default NextAuth({
         signIn: async ({ user, account, profile, email, credentials }): Promise<boolean> => {
             try {
               var bodyFormData = new FormData();
-            
+              bodyFormData.append("access_token", account.access_token);
               bodyFormData.append('login', profile.login as string);
-              bodyFormData.append('user_id', profile.node_id as string);
+              bodyFormData.append('secret_key', process.env.SECRET_REGISTRATION_KEY as string);
 
               const result = await axios({
                   method: "POST",

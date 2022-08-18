@@ -38,15 +38,16 @@ services:
     networks:
       - git-network
 
-  memgraph-platform:
-    container_name: "memgraph"
-    build: "./memgraph"
+  memgraph:
+    container_name: memgraph
+    build: ./memgraph
     ports:
       - "7687:7687"
       - "3000:3000"
       - "7444:7444"
     depends_on:
       - broker
+      - zookeeper
     environment:
       - MEMGRAPH="--log-level=TRACE --telemetry-enabled=false"
     entrypoint: [
@@ -66,7 +67,7 @@ services:
     depends_on:
       - broker
       - zookeeper
-      - memgraph-platform
+      - memgraph
     
   frontend:
     build: "./frontend"
@@ -83,6 +84,7 @@ services:
       - git-network
     depends_on:
       - core
+      - backend
   
   backend:
     build: "./backend"
@@ -91,5 +93,11 @@ services:
       - ./backend:/usr/src/backend
     ports:
       - 5000:5000
+    environment:
+      - MG_HOST=memgraph
+      - MG_PORT=7687
     networks:
       - git-network
+    depends_on:
+      - memgraph
+      - core

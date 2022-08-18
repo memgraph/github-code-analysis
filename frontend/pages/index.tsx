@@ -5,6 +5,9 @@ import { useSession, signIn, signOut } from "next-auth/react";
 
 
 const Index: NextPage = () => {
+    const session = useSession();
+    console.log("session", session);
+
     return (
         <>
             <Container maxWidth={"lg"} sx={{mt: "10px"}}>
