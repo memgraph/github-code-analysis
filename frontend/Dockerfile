@@ -2,10 +2,9 @@ FROM node:16.16-bullseye
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
-RUN yarn install
-
+COPY package.json yarn.lock tsconfig.json ./
 COPY next.config.js next.config.js
+RUN yarn install
 
 COPY .env.local .env.local
 COPY pages ./pages

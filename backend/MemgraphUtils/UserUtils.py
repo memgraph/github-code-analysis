@@ -15,9 +15,6 @@ class UserUtils:
         except GQLAlchemyError:
             return False
 
-    def save_user(
-        self,
-        username: str,
-    ) -> None:
+    def save_user(self, username: str,) -> None:
         user = User(username=username)
         self._memgraph_instance.save_node(user)

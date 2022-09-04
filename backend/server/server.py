@@ -4,8 +4,9 @@ from datetime import datetime
 from multiprocessing import Process
 from os import getenv
 from time import sleep
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
+from mgclient import Node
 from dotenv import load_dotenv
 from flask import Flask, request, Response
 from flask_cors import CORS
@@ -17,8 +18,21 @@ from backend.MemgraphUtils.MemgraphInstance import MemgraphInstance
 from backend.server.ServerConstants import ServerConstants
 
 memgraph = MemgraphInstance.get_instance()
-from backend.MemgraphUtils.UserUtils import UserUtils
-from backend.MemgraphUtils.RepoUtils import RepoUtils
+MEMGRAPH_FOUND = False
+while not MEMGRAPH_FOUND:
+    try:
+        from backend.MemgraphUtils.UserUtils import UserUtils
+        from backend.MemgraphUtils.RepoUtils import RepoUtils
+        from backend.MemgraphUtils.BranchUtils import BranchUtils
+        from backend.MemgraphUtils.CommitUtils import CommitUtils
+        from backend.MemgraphUtils.StatusUtils import StatusUtils
+        from backend.MemgraphUtils.FileUtils import FileUtils
+        from backend.MemgraphUtils.Models import HasFile, Dir
+
+        MEMGRAPH_FOUND = True
+    except:
+        logging.warning("Memgraph not found. Trying again.")
+        sleep(1)
 
 logging.basicConfig(
     filename=ServerConstants.LOGGING_FILE_PATH.value,
@@ -63,19 +77,7 @@ def get_repo_data_from_api_results(repo_data: Dict, starred=False) -> Dict:
         "github_url": repo_data.get("html_url"),
         "is_starred": starred,
         "id": repo_data.get("id"),
-    }
-
-
-def get_repo_data_without_api(repo_data: Dict, starred=False) -> Dict:
-    return {
-        "name": repo_data.get("name", ""),
-        "full_name": repo_data.get("full_name", ""),
-        "public": repo_data.get("visibility", "public") == "public",
-        "updated_at": datetime.strptime(repo_data.get("pushed_at"), "%Y-%m-%dT%H:%M:%SZ"),
-        "languages": repo_data.get("language", []),
-        "github_url": repo_data.get("html_url"),
-        "is_starred": starred,
-        "id": repo_data.get("id"),
+        "default_branch": repo_data.get("default_branch"),
     }
 
 
@@ -103,10 +105,16 @@ def check_necessary_data(
 
     try:
         if check_user:
-            if not check_if_user_exists(
-                username=necessary_data.get("login"), access_token=necessary_data.get("access_token")
-            ):
-                return Response(json.dumps({"message": "User does not exist"}), status=401, mimetype="application/json")
+            try:
+                if not check_if_user_exists(
+                    username=necessary_data.get("login"), access_token=necessary_data.get("access_token")
+                ):
+                    return Response(json.dumps({"message": "User does not exist"}), status=401, mimetype="application/json")
+            except: # Broken pipe error: quick fix
+                if not check_if_user_exists(
+                    username=necessary_data.get("login"), access_token=necessary_data.get("access_token")
+                ):
+                    return Response(json.dumps({"message": "User does not exist"}), status=401, mimetype="application/json")
 
             if get_rate_limit(access_token=necessary_data.get("access_token")) < rate_limit:
                 return Response(json.dumps({"message": "Rate limit exceeded"}), status=429, mimetype="application/json")
@@ -155,6 +163,41 @@ def get_all_user_repositories(username: str) -> str:
     )
 
     return json.dumps({"repos": important_repo_data, "starred": important_starred_repo_data})
+
+
+def create_filetree_graph(filetree: List[Dict]) -> Dict:
+    if len(filetree) == 0:
+        return {}
+
+    hierarchy_dict = {"name": filetree[0].get("name"), "children": []}
+    files_dict = {}
+    for record in filetree[1:]:
+        files_dict[record.get("path")] = record
+        folder = hierarchy_dict
+        for subfolder in record.get("path").split("/")[:-1]:
+            for child in folder.get("children"):
+                if child.get("name") == subfolder:
+                    folder = child
+                    break
+
+        if record.get("label") == "File":
+            folder["children"].append({"name": record.get("name"), "attributes": {"type": "file"}})
+        else:
+            folder["children"].append({"name": record.get("name"), "attributes": {"type": "dir"}, "children": []})
+
+    return hierarchy_dict
+
+
+def start_filetree_creation(username: str, repo_name: str, access_token: str, commit_sha: str) -> None:
+    producer.send(
+        topic=ServerConstants.KAFKA_TO_CORE_TOPIC.value,
+        value=ServerConstants.KAFKA_DOWNLOAD_AND_GET_ALL_FORMAT.value.format(
+            username=username,
+            repo_name=repo_name,
+            commit_sha=commit_sha,
+            access_token=access_token,
+        ).encode("utf-8"),
+    )
 
 
 ## Routes
@@ -315,7 +358,7 @@ def refresh_repos():
         ):
             edges_to_update.append({"repo_id": repo_id, "is_starred": True})
 
-    repo_utils.detach_repositories(username=request.form.get("login"), repo_list=repos_to_detach)
+    # repo_utils.detach_repositories(username=request.form.get("login"), repo_list=repos_to_detach)
     repo_utils.update_edges(username=request.form.get("login"), repo_id_list=edges_to_update)
     repo_utils.save_repositories(username=request.form.get("login"), repo_list=repos_to_save)
     repo_utils.update_repositories(repo_list=repos_to_update)
@@ -360,12 +403,367 @@ def search_repos():
 
 @app.route("/test", methods=["GET"])
 def test():
+    file_utils = FileUtils(memgraph)
+    # kek = file_utils.get_filetree_for_commit(commit_id="0b9d5a5d88eee31e0fe52a6af97354274e981958")
+    return Response(str(file_utils.get_dependencies("7fbec93709fb1fb91a484d36fc063a1f4ee903f3")), status=200)
+
+
+@app.route("/verify_repo", methods=["POST"])
+def verify_repo():
+    check = check_necessary_data(
+        necessary_data={
+            "access_token": request.form.get("access_token"),
+            "login": request.form.get("login"),
+            "full_name": request.form.get("full_name"),
+        },
+        check_user=True,
+    )
+
+    if check:
+        return check
+
+    git_api_utils = GitApiUtils(request.form.get("access_token"))
+    if git_api_utils.repo_exists(request.form.get("full_name")):
+        return Response(status=200)
+
+    return Response(status=404)
+
+
+@app.route("/get_branches", methods=["POST"])
+def get_branches():
+    check = check_necessary_data(
+        necessary_data={
+            "access_token": request.form.get("access_token"),
+            "login": request.form.get("login"),
+            "full_name": request.form.get("full_name"),
+        },
+        check_user=True,
+    )
+
+    if check:
+        return check
+
+    git_api_utils = GitApiUtils(request.form.get("access_token"))
+    if not git_api_utils.repo_exists(request.form.get("full_name")):
+        return Response(status=404)
+
     repo_utils = RepoUtils(memgraph)
-    repo_utils.delete_repositories(username="Adri-Noir")
-    return Response(str(repo_utils.get_repositories(username=request.form.get("login"))), status=200)
+    if not repo_utils.repo_exists(full_name=request.form.get("full_name")):
+        repo_utils.save_repositories(
+            username=request.form.get("login"),
+            repo_list=[
+                get_repo_data_from_api_results(
+                    repo_data=git_api_utils.get_single_repo_info(request.form.get("full_name"))
+                )
+            ],
+        )
+
+    if not repo_utils.is_repo_connected(full_name=request.form.get("full_name"), username=request.form.get("login")):
+        repo_utils.connect_repo(full_name=request.form.get("full_name"), username=request.form.get("login"))
+
+    branch_utils = BranchUtils(memgraph)
+    branches = branch_utils.get_branches_for_repo(user_repo=request.form.get("full_name"))
+
+    formatted_branches = list(
+        map(
+            lambda branch: branch_utils.map_branch_object_to_json(branch.get("branch")),
+            branches,
+        )
+    )
+
+    if len(formatted_branches) == 0:
+        git_branches = git_api_utils.get_all_repo_branches(request.form.get("full_name"), first_page_only=False)
+        branch_utils.save_branches(user_repo=request.form.get("full_name"), branch_list=git_branches)
+        branches = branch_utils.get_branches_for_repo(user_repo=request.form.get("full_name"))
+        formatted_branches = list(
+            map(
+                lambda branch: branch_utils.map_branch_object_to_json(branch.get("branch")),
+                branches,
+            )
+        )
+
+    default_branch = repo_utils.get_default_branch(full_name=request.form.get("full_name"))
+
+    return Response(json.dumps({"branches": formatted_branches, "default_branch": default_branch}), status=200)
+
+
+@app.route("/refresh_branches", methods=["POST"])
+def refresh_branches():
+    check = check_necessary_data(
+        necessary_data={
+            "access_token": request.form.get("access_token"),
+            "login": request.form.get("login"),
+            "full_name": request.form.get("full_name"),
+        },
+        check_user=True,
+    )
+
+    if check:
+        return check
+
+    git_api_utils = GitApiUtils(request.form.get("access_token"))
+    if not git_api_utils.repo_exists(request.form.get("full_name")):
+        return Response(status=404)
+
+    git_branches = git_api_utils.get_all_repo_branches(user_repo=request.form.get("full_name"), first_page_only=False)
+    git_branches_names_set = set(map(lambda branch: branch.get("name"), git_branches))
+    name_branch_dict = {branch.get("name"): branch for branch in git_branches}
+    branch_utils = BranchUtils(memgraph)
+    repo_utils = RepoUtils(memgraph)
+    branches = list(
+        map(
+            lambda branch: branch.get("branch"),
+            branch_utils.get_branches_for_repo(user_repo=request.form.get("full_name")),
+        )
+    )
+    memgraph_branches_names_set = set(map(lambda branch: branch.name, branches))
+    memgraph_name_branch_dict = {branch.name: branch for branch in branches}
+    branches_to_delete = memgraph_branches_names_set - git_branches_names_set
+    branches_to_add = git_branches_names_set - memgraph_branches_names_set
+    branches_to_update = set(
+        filter(
+            lambda lambda_branch_name: branch_utils.branch_needs_updating(
+                git_branch_data=name_branch_dict[lambda_branch_name],
+                memgraph_branch_data=memgraph_name_branch_dict[lambda_branch_name],
+            ),
+            memgraph_branches_names_set & git_branches_names_set,
+        )
+    )
+
+    branch_utils.save_branches(
+        user_repo=request.form.get("full_name"), branch_list=[name_branch_dict[branch] for branch in branches_to_add]
+    )
+    branch_utils.delete_branches(user_repo=request.form.get("full_name"), branch_list=list(branches_to_delete))
+    for branch_name in branches_to_update:
+        branch_utils.update_branch(
+            user_repo=request.form.get("full_name"),
+            branch_data=name_branch_dict[branch_name],
+        )
+
+    formatted_branches = list(
+        map(
+            lambda branch: branch_utils.map_branch_object_to_json(branch.get("branch")),
+            branch_utils.get_branches_for_repo(user_repo=request.form.get("full_name")),
+        )
+    )
+
+    default_branch = repo_utils.get_default_branch(full_name=request.form.get("full_name"))
+
+    return Response(json.dumps({"branches": formatted_branches, "default_branch": default_branch}), status=200)
+
+
+@app.route("/get_commits", methods=["POST"])
+def get_commits():
+    check = check_necessary_data(
+        necessary_data={
+            "access_token": request.form.get("access_token"),
+            "login": request.form.get("login"),
+            "full_name": request.form.get("full_name"),
+            "branch": request.form.get("branch"),
+        },
+        check_user=True,
+    )
+
+    if check:
+        return check
+
+    git_api_utils = GitApiUtils(request.form.get("access_token"))
+    if not git_api_utils.repo_exists(request.form.get("full_name")):
+        return Response(status=404)
+
+    branch_utils = BranchUtils(memgraph)
+    branch = branch_utils.get_branch(user_repo=request.form.get("full_name"), branch_name=request.form.get("branch"))
+    if not branch:
+        return Response(status=404)
+
+    commit_utils = CommitUtils(memgraph)
+    commits = commit_utils.get_commits_for_branch(
+        user_repo=request.form.get("full_name"), branch_name=request.form.get("branch")
+    )
+
+    formatted_commits = list(
+        map(
+            lambda commit: commit_utils.map_commit_object_to_json(commit.get("commit")),
+            commits,
+        )
+    )
+
+    if len(formatted_commits) == 0:
+        git_commits = git_api_utils.get_all_commits_for_branch(
+            user_repo=request.form.get("full_name"), branch_sha=branch.commit_id
+        )
+        commit_utils.save_commits(
+            user_repo=request.form.get("full_name"),
+            branch_name=request.form.get("branch"),
+            commit_list=git_commits,
+        )
+        commits = commit_utils.get_commits_for_branch(
+            user_repo=request.form.get("full_name"), branch_name=request.form.get("branch")
+        )
+        formatted_commits = list(
+            map(
+                lambda commit: commit_utils.map_commit_object_to_json(commit.get("commit")),
+                commits,
+            )
+        )
+
+    return Response(json.dumps(formatted_commits), status=200)
+
+
+@app.route("/refresh_commits", methods=["POST"])
+def refresh_commits():
+    check = check_necessary_data(
+        necessary_data={
+            "access_token": request.form.get("access_token"),
+            "login": request.form.get("login"),
+            "full_name": request.form.get("full_name"),
+            "branch": request.form.get("branch"),
+        },
+        check_user=True,
+    )
+
+    if check:
+        return check
+
+    git_api_utils = GitApiUtils(request.form.get("access_token"))
+    if not git_api_utils.repo_exists(request.form.get("full_name")):
+        return Response(status=404)
+
+    branch_utils = BranchUtils(memgraph)
+    branch = branch_utils.get_branch(user_repo=request.form.get("full_name"), branch_name=request.form.get("branch"))
+    if not branch:
+        return Response(status=404)
+
+    git_commits = git_api_utils.get_all_commits_for_branch(
+        user_repo=request.form.get("full_name"), branch_sha=branch.commit_id
+    )
+    git_commits_hashes = set(map(lambda commit: commit.get("sha"), git_commits))
+    git_hash_commit_dict = {commit.get("sha"): commit for commit in git_commits}
+
+    commit_utils = CommitUtils(memgraph)
+    commits = commit_utils.get_commits_for_branch(
+        user_repo=request.form.get("full_name"), branch_name=request.form.get("branch")
+    )
+    formatted_commits = list(map(lambda commit: commit.get("commit"), commits))
+    memgraph_commits_hashes = set(map(lambda commit: commit.commit_id, formatted_commits))
+
+    new_commits = git_commits_hashes - memgraph_commits_hashes
+    new_commits_list = list(map(lambda commit_hash: git_hash_commit_dict[commit_hash], new_commits))
+    commit_utils.save_commits(
+        user_repo=request.form.get("full_name"),
+        branch_name=request.form.get("branch"),
+        commit_list=new_commits_list,
+    )
+
+    formatted_commits = list(
+        map(
+            lambda commit: commit_utils.map_commit_object_to_json(commit.get("commit")),
+            commits,
+        )
+    )
+
+    return Response(json.dumps(formatted_commits), status=200)
+
+
+@app.route("/get_graphs", methods=["POST"])
+def get_graphs():
+    check = check_necessary_data(
+        necessary_data={
+            "access_token": request.form.get("access_token"),
+            "login": request.form.get("login"),
+            "full_name": request.form.get("full_name"),
+            "branch": request.form.get("branch"),
+            "commit": request.form.get("commit"),
+        },
+        check_user=True,
+    )
+
+    if check:
+        return check
+
+    git_api_utils = GitApiUtils(request.form.get("access_token"))
+    if not git_api_utils.repo_exists(request.form.get("full_name")):
+        return Response(status=404)
+
+    branch_utils = BranchUtils(memgraph)
+    branch = branch_utils.get_branch(user_repo=request.form.get("full_name"), branch_name=request.form.get("branch"))
+    if not branch:
+        return Response(status=404)
+
+    commit_utils = CommitUtils(memgraph)
+    commit = commit_utils.get_commit(branch_name=request.form.get("branch"), commit_id=request.form.get("commit"))
+    if not commit:
+        return Response(status=404)
+
+    status_utils = StatusUtils(memgraph)
+    status = status_utils.get_commit_status(commit_id=commit.commit_id)
+
+    if not status:
+        return Response(json.dumps({"data": {}, "status": "new"}), status=200)
+
+    file_utils = FileUtils(memgraph)
+    #files = file_utils.get_filetree_for_commit(commit_id=commit.commit_id)
+    files = file_utils.get_filetree_for_commit(commit_id=commit.commit_id)
+    dependencies = file_utils.get_dependencies(commit_id=commit.commit_id)
+
+    if not files:
+        return Response(json.dumps({"data": {}, "status": status}), status=200)
+
+    graphs = {}
+
+    formatted_filetree = create_filetree_graph(files)
+
+    graphs["File Tree"] = formatted_filetree
+    graphs["Dependencies"] = dependencies
+
+    return Response(json.dumps({"data": graphs, "status": status}), status=200)
+
+
+@app.route("/start_graph_builder", methods=["POST"])
+def start_graph_builder():
+    check = check_necessary_data(
+        necessary_data={
+            "access_token": request.form.get("access_token"),
+            "login": request.form.get("login"),
+            "full_name": request.form.get("full_name"),
+            "branch": request.form.get("branch"),
+        },
+        check_user=True,
+    )
+
+    if check:
+        return check
+
+    git_api_utils = GitApiUtils(request.form.get("access_token"))
+    if not git_api_utils.repo_exists(request.form.get("full_name")):
+        return Response(status=404)
+
+    branch_utils = BranchUtils(memgraph)
+    branch = branch_utils.get_branch(user_repo=request.form.get("full_name"), branch_name=request.form.get("branch"))
+    if not branch:
+        return Response(status=404)
+
+    commit_utils = CommitUtils(memgraph)
+    commits = commit_utils.get_commits_for_branch(
+        user_repo=request.form.get("full_name"), branch_name=request.form.get("branch")
+    )
+    status_utils = StatusUtils(memgraph)
+
+    for commit in commits:
+        status = status_utils.get_commit_status(commit_id=commit.get("commit").commit_id)
+        if not status:
+            status_utils.add_status_to_commit(commit_id=commit.get("commit").commit_id, status="loading")
+            username, repo = request.form.get("full_name").split("/")
+            start_filetree_creation(
+                username=username,
+                repo_name=repo,
+                commit_sha=commit.get("commit").commit_id,
+                access_token=request.form.get("access_token"),
+            )
+
+    return Response(status=200)
 
 
 if __name__ == "__main__":
     logging.info("Backend is ready.")
     app.run(debug=True, host="127.0.0.1", port=5000)
-

@@ -53,7 +53,7 @@ const NavBar = () => {
                         <Avatar alt="User Avatar" src={avatar_url} />
                     </Grid>
                     <Grid item lg sx={{display: {xs: "none", sm: "block"}}}>
-                        <Typography variant={"body2"} noWrap={true} textAlign={"center"} component="div">{username}</Typography>
+                        <Typography sx={{fontWeight: "bold"}} variant={"body2"} noWrap={true} textAlign={"center"} component="div">{username}</Typography>
                     </Grid>
                 </Grid>
             
