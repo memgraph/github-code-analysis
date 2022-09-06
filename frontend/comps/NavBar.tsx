@@ -67,24 +67,9 @@ const NavBar = () => {
         <AppBar position="static" color={"warning"}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
-                <GitHubIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
-                <Typography
-                    variant="h6"
-                    noWrap
-                    component="a"
-                    href="/"
-                    sx={{
-                    mr: 2,
-                    display: { xs: 'none', md: 'flex' },
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                    letterSpacing: '.3rem',
-                    color: 'inherit',
-                    textDecoration: 'none',
-                    }}
-                >
-                    LOGO
-                </Typography>
+                <Box sx={{display: { xs: 'none', md: 'flex' }, mr: 4, cursor: "pointer"}}>
+                    <Link href={"/"}><img src={"/logos/logo_dark.svg"} alt={"logo"} style={{height: "50px", width: "50px"}}/></Link>
+                </Box>
 
                 <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
                     <IconButton
@@ -118,31 +103,15 @@ const NavBar = () => {
                     {showPages.map((page) => (
                         <Link key={page.title} href={page.link}>
                             <MenuItem key={page.title} onClick={handleCloseNavMenu}>
-                            <Typography textAlign="center" color={theme.palette.primary.contrastText}>{page.title}</Typography>
+                            <Typography textAlign="center" color={"black"}>{page.title}</Typography>
                             </MenuItem>
                         </Link>
                     ))}
                     </Menu>
                 </Box>
-                <GitHubIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
-                <Typography
-                    variant="h5"
-                    noWrap
-                    component="a"
-                    href=""
-                    sx={{
-                    mr: 2,
-                    display: { xs: 'flex', md: 'none' },
-                    flexGrow: 1,
-                    fontFamily: 'monospace',
-                    fontWeight: 700,
-                    letterSpacing: '.3rem',
-                    color: 'inherit',
-                    textDecoration: 'none',
-                    }}
-                >
-                    LOGO
-                </Typography>
+                <Box sx={{display: { xs: 'flex', md: 'none' }, flexGrow: 1, mr: 1, cursor: "pointer"}}>
+                    <Link href={"/"}><img src={"/logos/logo_dark.svg"} alt={"logo"} style={{height: "50px", width: "50px"}}/></Link>
+                </Box>
                 <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
                     {showPages.map((page) => (
                     <Link key={page.title} href={page.link}>

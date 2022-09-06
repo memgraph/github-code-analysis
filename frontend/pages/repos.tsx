@@ -248,9 +248,9 @@ const Repos: NextPage = () => {
                                             <>
                                                 <Box sx={{display: {xs: "none", sm: "inline-block"}}}>
                                                     {repo.languages.map((language, lang_index) => {
-                                                        let style = {mr: "5px", background: "linear-gradient(90deg, rgba(251,110,0,1) 0%, rgba(255,197,0,1) 100%)", color: "white"}
+                                                        let style = {mr: "5px", color: "white"}
                                                         if (lang_index > 3) {
-                                                            style = {mr: "5px", display: {sm: "none", md: "none", lg: "inline-flex", background: "linear-gradient(90deg, rgba(251,110,0,1) 0%, rgba(255,197,0,1) 100%)", color: "white"}} as any
+                                                            style = {mr: "5px", display: {sm: "none", md: "none", lg: "inline-flex", color: "white"}} as any
                                                         }
                                                         if(lang_index > 3) {
                                                             return <React.Fragment key={lang_index}></React.Fragment>
@@ -276,10 +276,10 @@ const Repos: NextPage = () => {
                                                                 }
 
                                                                 if (lang_index > 0) {
-                                                                    return <Chip key={lang_index} color={"primary"} variant="outlined" size="small" label={language} component="span" sx={{ml: "5px", background: "linear-gradient(90deg, rgba(251,110,0,1) 0%, rgba(255,197,0,1) 100%)", color: "white"}}/>
+                                                                    return <Chip key={lang_index} color={"primary"} variant="filled" size="small" label={language} component="span" sx={{ml: "5px", color: "white"}}/>
                                                                 }
 
-                                                                return <Chip key={lang_index} color={"primary"} variant="outlined" size="small" label={language} component="span" sx={{background: "linear-gradient(90deg, rgba(251,110,0,1) 0%, rgba(255,197,0,1) 100%)", color: "white"}}/>
+                                                                return <Chip key={lang_index} color={"primary"} variant="filled" size="small" label={language} component="span" sx={{color: "white"}}/>
                                                             })}
                                                         </Box>
                                                     </Box>

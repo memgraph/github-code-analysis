@@ -209,27 +209,34 @@ const Index: NextPage = () => {
     return (
         <>
 
-            <Grid container justifyContent={"space-between"} alignItems={"center"} sx={{width: "100%", backgroundColor: "#F9F9F9", height: "68vh", pb: "10px"}}>
-                <Grid item lg={5} md={5} sm={12} xs={12} sx={{height: "100%"}}>
-                    <Box sx={{display: "flex", justifyContent: "center", alignItems: "center", height: "100%", marginLeft: "3rem"}}>
-                        <Stack direction={"column"} justifyContent={"center"} alignContent={"center"} spacing={4} sx={{height: "100%", padding: "2rem"}}>
-                            <Typography textAlign={"center"} variant={"h2"} sx={{fontWeight: "bold", color: "#211D1F"}}>GitHub Code Analyser</Typography>
-                            <Typography textAlign={"center"} variant={"body2"}>Looking to improve your code? GitHub Code Analyser is an open source project that analyses your GitHub repositories and shows how you can improve your code. So what are you waiting? </Typography>
-                            <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}><Link href={"/repos"}><Button size={"large"} variant={"contained"} color={"primary"} sx={{textColor: "white", width: "60%"}}>Get Started</Button></Link></Box>
-                            <Typography textAlign={"center"} variant={"body2"}>Check out GitHub Code Analyser on <Link color={"black"} href={"https://github.com/memgraph/github-code-analysis/"}>GitHub</Link> <GitHub fontSize={"small"} /></Typography>
+            <Grid container justifyContent={"space-between"} alignItems={"stretch"} sx={{width: "100%", backgroundColor: "#F9F9F9", minHeight: "68vh", pb: "10px"}}>
+                <Grid item lg={5} md={5} sm={12} xs={12} sx={{minHeight: "100%"}}>
+                    <Box sx={{display: "flex", justifyContent: "end", alignItems: "center", height: "100%"}}>
+                        <Stack direction={"column"} justifyContent={"center"} alignContent={"center"} spacing={4} sx={{height: "100%", paddingLeft: "4rem", paddingRight: "2rem", paddingTop: "2rem", paddingBottom: "2rem"}}>
+                            <Typography variant={"h2"} sx={{fontWeight: "bold", color: "#211D1F"}}>GitHub Code Analyser</Typography>
+                            <Typography  variant={"body2"}>Looking to improve your code? GitHub Code Analyser is an open source project that analyses your GitHub repositories and shows how you can improve your code. So what are you waiting? </Typography>
+                            <Box sx={{display: "flex", justifyContent: "start", alignItems: "center"}}><Link href={"/repos"}><Button size={"large"} variant={"contained"} color={"primary"} sx={{textColor: "white", width: "200px"}}>Get Started</Button></Link></Box>
+                            <Typography variant={"body2"}>Check out GitHub Code Analyser on <Link color={"black"} href={"https://github.com/memgraph/github-code-analysis/"}>GitHub</Link> <GitHub fontSize={"small"} /></Typography>
                         </Stack>
                     </Box>
                 </Grid>
-                <Grid item lg={7} md={7} sm={12} xs={12} sx={{height: "100%", display: {xs: "none", sm: "none", md: "block"}}}>
-                    <NetworkGraph data={graph_data} />
+                <Grid item lg={7} md={7} sm={12} xs={12} sx={{minHeight: "100%", display: {xs: "none", sm: "none", md: "block"}}}>
+                    <Box sx={{height: "100%"}} className={"index_page_graph"}>
+                        <NetworkGraph data={graph_data} />
+                    </Box>
                 </Grid>
             </Grid>
-            <Box>
-                <Typography textAlign={"center"} variant={"h4"} sx={{fontWeight: "bold", padding: "1rem", background: "linear-gradient(90deg, rgba(220,34,35,1) 0%, rgba(114,0,150,1) 100%);", color: "white"}}>Powered by Memgraph <img style={{borderRadius: "5px"}} src={"/cover_images/memgraph_logo_square.png"} height={"32rem"}/></Typography>
-            </Box>
-            <Box sx={{display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#F9F9F9", pt: "30px", pb: "30px"}}>
-                <img src={"/cover_images/memgraph_sample_query_upscaled.png"} alt={"Memgraph Logo"} style={{width: "70vw"}}/>
-            </Box>
+
+            <Grid container sx={{display: "flex", justifyContent: "center", alignItems: "center", backgroundColor: "#F9F9F9", pt: "30px", pb: "30px"}}>
+                <Grid item lg={8} md={10} sm={10} xs={11}>
+                    <img src={"/cover_images/memgraph_sample_query_upscaled.png"} alt={"Memgraph Logo"} style={{width: "100%"}}/>
+                </Grid>
+            </Grid>
+
+            <Stack spacing={2} direction={"row"} justifyContent={"center"} alignItems={"center"} sx={{padding: "1.5rem", background: "linear-gradient(90deg, rgba(255,197,0,1) 0%, rgba(220,34,35,1) 40%, rgba(114,0,150,1) 100%);", color: "white"}}>
+                <Typography textAlign={"center"} variant={"body2"}>Powered by </Typography>
+                <img src={"/logos/memgraph-white-logo.svg"} height={"32rem"} />
+            </Stack>
 
         </>
     );

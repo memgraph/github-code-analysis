@@ -42,7 +42,10 @@ const NetworkGraph = ({data}: {data: any}) => {
         if (e) {
             width = e.clientWidth;
             height = e.clientHeight;
-            console.log(width, height);
+        }
+
+        if (width === 0 || height === 0) {
+            return;
         }
 
         const simulation = d3
@@ -237,7 +240,7 @@ const NetworkGraph = ({data}: {data: any}) => {
     }, "graph_data": data});
 
     return (
-        <Box className={"dependency_graph"} sx={{width:"100%", minHeight: "50vh", height: "100%"}}>
+        <Box className={"dependency_graph"} sx={{width:"100%", height: "100%"}}>
             <svg style={{width: "100%", height: "100%"}} ref={graph}></svg>
         </Box>
     )

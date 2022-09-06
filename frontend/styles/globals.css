@@ -33,3 +33,7 @@ text {
     -ms-user-select: none;
     user-select: none;
 }
+
+.index_page_graph {
+    pointer-events: none;
+}
