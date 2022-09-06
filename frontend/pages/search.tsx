@@ -225,7 +225,7 @@ const Search = () => {
                                     <CardActions>
                                         <Grid container justifyContent={"center"} alignItems={"center"} direction={"row"} spacing={1}>
                                             <Grid item lg={12}>
-                                                <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}><GitHub color={"primary"} /></Box>
+                                                <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}><GitHub color={"secondary"} /></Box>
                                             </Grid>
                                         </Grid>
                                     </CardActions>
@@ -242,7 +242,7 @@ const Search = () => {
                             <React.Fragment key={index}>
                                 <ListItem button  secondaryAction={
                                     <>
-                                        <IconButton edge="end" href={repo.github_url}><GitHub color={"primary"} /></IconButton>
+                                        <IconButton edge="end" href={repo.github_url}><GitHub color={"secondary"} /></IconButton>
                                     </>
                                 }>
                                     <ListItemText onClick={() => router.push("/repo/"+repo.full_name)} primary={repo.full_name} secondary={

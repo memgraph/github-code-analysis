@@ -40,7 +40,7 @@
     align-items: center;
     justify-content: center;
     margin: 35px 0;
-    background: #8671E1;
+    background: #FB6E00;
 }
 
 .elemental_node_file {
@@ -58,10 +58,10 @@
     align-items: center;
     justify-content: center;
     margin: 35px 0;
-    background: #B69FF2;
+    background: #F9AF73;
 }
 
 .path_link {
     transform: translate(105px, 0px);
-    stroke: #6B8CE6 !important;
+    stroke: #211D1F !important;
 }

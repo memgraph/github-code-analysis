@@ -186,9 +186,11 @@ const Repos: NextPage = () => {
             <Snackbar open={snackOpen} autoHideDuration={5000} onClose={() => setSnackOpen(false)}>
                 <Alert severity="error">An error occurred while getting repository data!</Alert>
             </Snackbar>
+            <Box>
 
+            </Box>
             <Grow in={!open}>
-                <Grid container justifyContent={"center"} sx={{mt: "20px", mb:"5px"}}>
+                <Grid container justifyContent={"center"} sx={{mt: "40px", mb:"5px"}}>
                     <Grid item lg={6} md={8} sm={8} xs={11}>
                         <Grid container justifyContent={"space-between"} alignContent={"end"}>
                             <Grid item lg={6} md={6} sm={6} xs={6}>
@@ -209,6 +211,7 @@ const Repos: NextPage = () => {
                                         <InputAdornment position="end">
                                             <IconButton
                                             aria-label="toggle password visibility"
+                                            color={"primary"}
                                             >
                                                 <SearchIcon />
                                             </IconButton>
@@ -220,24 +223,24 @@ const Repos: NextPage = () => {
                                 </Box>
                             </Grid>
                         </Grid>
-                        
+
                     </Grid>
                 </Grid>
             </Grow>
-            
+
             <Zoom in={!open}>
                 <Grid container justifyContent={"center"} alignContent={"center"}>
                     <Grid item lg={6} md={8} sm={10} xs={11} sx={{borderRadius: "10px"}}>
                         <Paper elevation={2} >
-                            <List sx={{ maxHeight: "70vh", overflow: "auto", width: '100%', bgcolor: 'white', pt: "0", pb: "0" }}>
+                            <List sx={{ maxHeight: "75vh", overflow: "auto", width: '100%', bgcolor: 'white', pt: "0", pb: "0" }}>
                                 <ListItem button onClick={() => refresh()}>
                                     <Grid container justifyContent={"center"} alignContent={"center"}>
                                         <Grid item lg={6} md={6} sm={6} xs={6}>
                                             <Box textAlign={"center"}><LoadingButton disableRipple sx={{backgroundColor: "transparent", "&.MuiButtonBase-root:hover": {bgcolor: "transparent"}}} color="primary" size="large" loading={refreshLoading} variant="text"> <RefreshIcon /> </LoadingButton></Box>
-                                            
+
                                         </Grid>
                                     </Grid>
-                                        
+
                                 </ListItem>
                                 {data.map((repo, index) => (
                                     <React.Fragment key={index}>
@@ -245,24 +248,24 @@ const Repos: NextPage = () => {
                                             <>
                                                 <Box sx={{display: {xs: "none", sm: "inline-block"}}}>
                                                     {repo.languages.map((language, lang_index) => {
-                                                        let style = {mr: "5px"}
-                                                        if (lang_index > 2) {
-                                                            style = {mr: "5px", display: {sm: "none", md: "none", lg: "inline-flex"}} as any
+                                                        let style = {mr: "5px", background: "linear-gradient(90deg, rgba(251,110,0,1) 0%, rgba(255,197,0,1) 100%)", color: "white"}
+                                                        if (lang_index > 3) {
+                                                            style = {mr: "5px", display: {sm: "none", md: "none", lg: "inline-flex", background: "linear-gradient(90deg, rgba(251,110,0,1) 0%, rgba(255,197,0,1) 100%)", color: "white"}} as any
                                                         }
-                                                        if(lang_index > 4) {
+                                                        if(lang_index > 3) {
                                                             return <React.Fragment key={lang_index}></React.Fragment>
                                                         }
                                                         return <Chip key={lang_index} color={"primary"} size="small" label={language} sx={style} />
                                                     })}
                                                 </Box>
-                                                <IconButton color={"warning"} edge="end" href={repo.github_url}><GitHubIcon /></IconButton>
+                                                <IconButton color={"secondary"} edge="end" href={repo.github_url}><GitHubIcon /></IconButton>
                                             </>
                                         }>
                                             <ListItemText
-                                                onClick={() => router.push("/repo/"+repo.full_name)}  
+                                                onClick={() => router.push("/repo/"+repo.full_name)}
                                                 primary={
-                                                    <Typography variant={"body1"} noWrap={false} textAlign={"left"}>{repo.full_name} <Chip size={"small"} label={repo.public ? "Public": "Private"} color={"info"} variant="outlined" component={"span"}/></Typography>
-                                                } 
+                                                    <Typography variant={"body1"} noWrap={false} textAlign={"left"}>{repo.full_name} <Chip size={"small"} label={repo.public ? "Public": "Private"} color={"primary"} variant="outlined" component={"span"}/></Typography>
+                                                }
                                                 secondary={
                                                     <Box sx={{pt: {xs: "5px", sm: 0}, display: "inline-block"}} component="span">
                                                         <Typography variant="body2" component={"span"} sx={{mr: "5px"}}>{repo.updated_at}</Typography>
@@ -273,21 +276,21 @@ const Repos: NextPage = () => {
                                                                 }
 
                                                                 if (lang_index > 0) {
-                                                                    return <Chip key={lang_index} color={"primary"} variant="outlined" size="small" label={language} component="span" sx={{ml: "5px"}}/>
+                                                                    return <Chip key={lang_index} color={"primary"} variant="outlined" size="small" label={language} component="span" sx={{ml: "5px", background: "linear-gradient(90deg, rgba(251,110,0,1) 0%, rgba(255,197,0,1) 100%)", color: "white"}}/>
                                                                 }
 
-                                                                return <Chip key={lang_index} color={"primary"} variant="outlined" size="small" label={language} component="span"/>
+                                                                return <Chip key={lang_index} color={"primary"} variant="outlined" size="small" label={language} component="span" sx={{background: "linear-gradient(90deg, rgba(251,110,0,1) 0%, rgba(255,197,0,1) 100%)", color: "white"}}/>
                                                             })}
                                                         </Box>
                                                     </Box>
-                                                    
+
                                                 } />
                                         </ListItem>
 
                                         {index !== data.length - 1 && <Divider variant="middle" component="li" />}
                                     </React.Fragment>
-                                    
-                                    
+
+
                                 ))}
                             </List>
                         </Paper>

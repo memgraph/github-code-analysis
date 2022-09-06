@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useTheme } from '@mui/material/styles';
 
 
 const pages = [ {title: "Repositories", link: "/repos", authenticated: true}, 
@@ -15,6 +16,7 @@ const pages = [ {title: "Repositories", link: "/repos", authenticated: true},
 const NavBar = () => {
     const session = useSession();
     const router = useRouter();
+    const theme = useTheme();
 
     const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
 
@@ -62,7 +64,7 @@ const NavBar = () => {
     )
 
     return (
-        <AppBar position="static">
+        <AppBar position="static" color={"warning"}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
                 <GitHubIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
@@ -116,7 +118,7 @@ const NavBar = () => {
                     {showPages.map((page) => (
                         <Link key={page.title} href={page.link}>
                             <MenuItem key={page.title} onClick={handleCloseNavMenu}>
-                            <Typography textAlign="center">{page.title}</Typography>
+                            <Typography textAlign="center" color={theme.palette.primary.contrastText}>{page.title}</Typography>
                             </MenuItem>
                         </Link>
                     ))}
@@ -147,7 +149,7 @@ const NavBar = () => {
                         <Button
                             key={page.title}
                             onClick={handleCloseNavMenu}
-                            sx={{ my: 2, color: 'white', display: 'block' }}
+                            sx={{ my: 2, display: 'block', color: "white" }}
                         >
                             {page.title}
                         </Button>

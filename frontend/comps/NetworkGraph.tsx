@@ -36,15 +36,14 @@ const NetworkGraph = ({data}: {data: any}) => {
 
         svg.selectAll("*").remove();
 
-        var e = document.querySelector("div.dependency_graph");
-        var width = 0
-        var height = 0
+        const e = document.querySelector("div.dependency_graph");
+        let width = 0;
+        let height = 0
         if (e) {
             width = e.clientWidth;
             height = e.clientHeight;
             console.log(width, height);
         }
-
 
         const simulation = d3
             .forceSimulation(data.nodes)
@@ -128,7 +127,7 @@ const NetworkGraph = ({data}: {data: any}) => {
             .style("font-size", "12px")
             .attr("x", 0)
             .attr("y", 0)
-            .attr("dy", (d) => (-1) * (d.size / 2));
+            .attr("dy", (d) => (-1) * (d.size - 10));
 
         node.on('mouseover', function(d) {
 
@@ -192,6 +191,7 @@ const NetworkGraph = ({data}: {data: any}) => {
             });
 
         svg.call(zoom);
+        zoom.scaleTo(svg.transition().duration(750), 0.65);
 
         simulation.on("tick", () => {
             link.attr("x1", function (d) { return d.source.x; })
@@ -215,19 +215,19 @@ const NetworkGraph = ({data}: {data: any}) => {
 
         function calculateX(tx, ty, sx, sy, radius){
             if(tx == sx) return tx;
-            var xLength = Math.abs(tx - sx);
-            var yLength = Math.abs(ty - sy);
+            const xLength = Math.abs(tx - sx);
+            const yLength = Math.abs(ty - sy);
 
-            var ratio = radius / Math.sqrt(xLength * xLength + yLength * yLength);
+            const ratio = radius / Math.sqrt(xLength * xLength + yLength * yLength);
             if(tx > sx)  return tx - xLength * ratio;
             if(tx < sx) return  tx + xLength * ratio;
         }
         function calculateY(tx, ty, sx, sy, radius){
             if(ty == sy) return ty;
-            var xLength = Math.abs(tx - sx);
-            var yLength = Math.abs(ty - sy);
+            const xLength = Math.abs(tx - sx);
+            const yLength = Math.abs(ty - sy);
 
-            var ratio = radius / Math.sqrt(xLength * xLength + yLength * yLength);
+            const ratio = radius / Math.sqrt(xLength * xLength + yLength * yLength);
             if(ty > sy) return ty - yLength * ratio;
             if(ty < sy) return ty + yLength * ratio;
         }
@@ -237,7 +237,7 @@ const NetworkGraph = ({data}: {data: any}) => {
     }, "graph_data": data});
 
     return (
-        <Box className={"dependency_graph"} sx={{width:"100%", minHeight: "50vh", height: "100%", backgroundColor: "white"}}>
+        <Box className={"dependency_graph"} sx={{width:"100%", minHeight: "50vh", height: "100%"}}>
             <svg style={{width: "100%", height: "100%"}} ref={graph}></svg>
         </Box>
     )

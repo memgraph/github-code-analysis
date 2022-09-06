@@ -7,9 +7,9 @@ body {
     height: 100vh;
     position: fixed;
     z-index: -1;
-    background-color: #f3f2fc;
-    opacity: 0.3;
-    background-image:  radial-gradient(#8671E1 2px, transparent 2px), radial-gradient(#8671E1 2px, #f3f2fc 2px);
+    background-color: #F9F9F9;
+    opacity: 0.2;
+    background-image:  radial-gradient(#FB6E00 2.5px, transparent 2.5px), radial-gradient(#FB6E00 2.5px, #F9F9F9 2.5px);
     background-size: 80px 80px;
     background-position: 0 0,40px 40px;
 }

@@ -34,7 +34,7 @@ interface Graphs {
 }
 
 const noDataView = (
-    <Box sx={{width:"100%", minHeight: "50vh", height: "100%", backgroundColor: "#BCB6F610"}}>
+    <Box sx={{width:"100%", minHeight: "50vh", height: "100%"}}>
         <Grid container justifyContent={'center'} alignContent={'center'} spacing={0} sx={{height: "100%"}}>
             <Grid item xs={11}>
                 <Typography textAlign={"center"} variant={"h5"}>
@@ -514,7 +514,7 @@ const Repo : NextPage = () => {
                     <Grid item xs={11}>
                         <Paper elevation={3} >
                             <Grid container justifyContent={'center'} alignContent={'center'} spacing={0} sx={{borderRadius: "10px"}}>
-                                <Grid item lg={2} md={3} sm={12} xs={12} sx={{boxShadow: {sm: "rgb(188, 182, 246, 1) 0 0.95px 1px", md: "rgb(188, 182, 246, 1) 0.95px 0 1px"}, backgroundColor: "#BCB6F605"}}>
+                                <Grid item lg={2} md={3} sm={12} xs={12} sx={{boxShadow: {sm: "rgb(251, 110, 0, 1) 0 0.95px 1px", md: "rgb(251, 110, 0, 1) 0.95px 0 1px"}, backgroundColor: "#BCB6F605"}}>
 
                                         <List sx={{pt: "0", pb: "0", overflow: "auto", height: "70vh"}}>
                                             <ListItem>
@@ -524,7 +524,7 @@ const Repo : NextPage = () => {
                                                     </Grid>
                                                 </Grid>
                                             </ListItem>
-                                            <Divider sx={{backgroundColor: "#BCB6F6"}} />
+                                            <Divider sx={{backgroundColor: "#FB6E00"}} />
                                             <ListItem button onClick={() => refreshCommits()}>
                                                 <Grid container justifyContent={"center"} alignContent={"center"}>
                                                     <Grid item lg={6} md={6} sm={6} xs={6}>
@@ -565,17 +565,17 @@ const Repo : NextPage = () => {
 
                                 </Grid>
 
-                                <Grid item lg={10} md={9} sm={12} xs={12} sx={{backgroundColor: "#BCB6F610", position: "relative", display: isNew ? "block" : "none", minHeight: "40vh"}}>
+                                <Grid item lg={10} md={9} sm={12} xs={12} sx={{position: "relative", display: isNew ? "block" : "none", minHeight: "40vh"}}>
                                     <Stack direction="column"
                                            justifyContent="center"
                                            alignItems="center"
                                            spacing={2}
                                             sx={{height: "100%"}}>
                                         <Typography variant={"h5"}>
-                                            No graphs found for this branch
+                                            No graphs found for this commit
                                         </Typography>
-                                        <Button variant={"contained"} color={"info"} onClick={() => createGraphForBranch(selectedBranch)}>
-                                            Create Graphs
+                                        <Button variant={"contained"} color={"primary"} onClick={() => createGraphForBranch(selectedBranch)}>
+                                            Generate Graphs
                                         </Button>
                                     </Stack>
 

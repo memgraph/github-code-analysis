@@ -110,11 +110,13 @@ class FileUtils:
         )
 
         node_communities = {}
-        community_colors = {}
+        community_colors = {-1: "#211D1F", 0: "#868089", 1:  "#FB6E00", 2: "#DC2223", 3: "#720096", 4: "#F9AF73", 5: "#FFC500"}
 
         for community_detection_result in community_detection_results:
             node_communities[community_detection_result.get("node")._id] = community_detection_result.get("community_id")
-            community_colors[community_detection_result.get("community_id")] = "#"+''.join([choice('0123456789ABCDEF') for i in range(6)])
+            if community_detection_result.get("community_id") not in community_colors:
+                community_colors[community_detection_result.get("community_id")] = f"#{''.join([choice('0123456789ABCDEF') for j in range(6)])}"
+
 
         for relationships in results:
             if relationships.get("f1")._end_node_id not in nodes:
