@@ -1,7 +1,6 @@
 import dynamic from "next/dynamic";
-import { Box, Grid, Typography } from "@mui/material"
+import { Box } from "@mui/material"
 import { useRef } from "react";
-import NodeElement from "./NodeElement";
 import styles from '../styles/filetree.module.css';
 
 
@@ -43,7 +42,7 @@ const FileTree = ({data}: {data: any}) => {
         <Box sx={{width:"100%", minHeight: "50vh", height: "100%"}}>
             <D3Tree renderCustomNodeElement={(rd3tProps) =>
                 renderNodeWithCustomEvents({ ...rd3tProps, handleNodeClick })
-            } pathClassFunc={() => styles.path_link} pathFunc={"step"} initialDepth={initialDepth.current} orientation={"horizontal"} nodeSize={{ x: 500, y: 80 }} separation={{ siblings: 1, nonSiblings: 1.5 }} shouldCollapseNeighborNodes={true} data={data}></D3Tree>
+            } pathClassFunc={() => styles.path_link} zoom={0.5} pathFunc={"step"} initialDepth={initialDepth.current} orientation={"horizontal"} translate={{x: 400, y: 350}} nodeSize={{ x: 500, y: 80 }} separation={{ siblings: 1, nonSiblings: 1.5 }} shouldCollapseNeighborNodes={true} data={data}></D3Tree>
         </Box>
         
     );

@@ -1,4 +1,3 @@
-import { NextPage, NextPageContext } from "next";
 import { Snackbar, Alert, Grid, List, Container, Skeleton, Typography, CircularProgress, IconButton, InputBase, Divider, Paper, Collapse, Card, CardContent, CardActions, Box, CardActionArea, Backdrop, ListItem, ListItemText } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';

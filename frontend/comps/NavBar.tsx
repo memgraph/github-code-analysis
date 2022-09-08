@@ -1,6 +1,5 @@
 import { AppBar, Box, Typography, Container, Toolbar, Menu, MenuItem, Button, IconButton, Tooltip, Avatar, Grid } from "@mui/material";
 import MenuIcon from '@mui/icons-material/Menu';
-import GitHubIcon from '@mui/icons-material/GitHub';
 import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Link from "next/link";
@@ -9,8 +8,7 @@ import { useTheme } from '@mui/material/styles';
 
 
 const pages = [ {title: "Repositories", link: "/repos", authenticated: true}, 
-                {title: "Search", link: "/search", authenticated: true}, 
-                {title: "About", link: "/about", authenticated: false}];
+                {title: "Search", link: "/search", authenticated: true}];
 
 
 const NavBar = () => {

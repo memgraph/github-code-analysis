@@ -1,7 +1,5 @@
 import type { NextPage } from "next";
-import { Button, Container, Grid, TextField, Typography, Box, Paper, Stack } from "@mui/material";
-import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { Button, Grid, Typography, Box, Stack } from "@mui/material";
 import NetworkGraph from "../comps/NetworkGraph";
 import Link from "next/link";
 import {GitHub} from "@mui/icons-material";
@@ -192,20 +190,6 @@ const graph_data = {'nodes': [{'id': 35532, 'name': 'models.py', 'path': 'memgra
 
 
 const Index: NextPage = () => {
-    const session = useSession();
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-    useEffect(() => {
-        if (session.status === "unauthenticated") {
-            setIsAuthenticated(false);
-        }
-
-        if (session.status === "authenticated") {
-            setIsAuthenticated(true);
-        }
-    }, [session]);
-
-
     return (
         <>
 
