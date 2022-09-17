@@ -8,18 +8,22 @@ import useD3 from "./useD3";
 const NetworkGraph = ({data}: {data: any}) => {
     const graph = useD3({"funct": (svg: any) => {
         const drag = (simulation: any) => {
-            function dragstarted(d) {
+            function dragstarted(d: any) {
+                // @ts-ignore
                 if (!d3.event.active) simulation.alphaTarget(0.5).restart();
                 d.fx = d.x;
                 d.fy = d.y;
             }
 
-            function dragged(d) {
+            function dragged(d: any) {
+                // @ts-ignore
                 d.fx = d3.event.x;
+                // @ts-ignore
                 d.fy = d3.event.y;
             }
 
-            function dragended(d) {
+            function dragended(d: any) {
+                // @ts-ignore
                 if (!d3.event.active) simulation.alphaTarget(0);
                 d.fx = null;
                 d.fy = null;
@@ -32,7 +36,7 @@ const NetworkGraph = ({data}: {data: any}) => {
                 .on("end", dragended);
         };
 
-        const edges = data.links.map((d) => d.index);
+        const edges = data.links.map((d: any) => d.index);
 
         svg.selectAll("*").remove();
 
@@ -57,7 +61,7 @@ const NetworkGraph = ({data}: {data: any}) => {
                     .distance(300)
                     .strength(0)
                     .iterations(1)
-                    .id((d) => d.id)
+                    .id((d: any) => d.id)
             )
             .force("charge",
                 d3.forceManyBody()
@@ -76,7 +80,7 @@ const NetworkGraph = ({data}: {data: any}) => {
         svg.append('defs').selectAll('marker')
             .data(edges)
             .enter().append("marker")
-            .attr('id', (d) => `arrowhead-${d}`)
+            .attr('id', (d: any) => `arrowhead-${d}`)
             .attr('viewBox', '-0 -5 10 10')
             .attr('refX', 10)
             .attr('refY', 0)
@@ -98,7 +102,7 @@ const NetworkGraph = ({data}: {data: any}) => {
             .enter()
             .append("line")
             .attr("class", "link")
-            .attr('marker-end', (d) => {
+            .attr('marker-end', (d: any) => {
                 return `url(#arrowhead-${d.index})`
             })
 
@@ -109,14 +113,14 @@ const NetworkGraph = ({data}: {data: any}) => {
             .selectAll("circle")
             .data(data.nodes)
             .join("circle")
-            .attr("r", (d) => d.size)
+            .attr("r", (d: any) => d.size)
             .attr("class", "node")
             .attr("fill", function (d: any) {
                 return d.color
             })
             .call(drag(simulation));
 
-        var label = svg
+        const label = svg
             .selectAll(null)
             .data(data.nodes)
             .enter()
@@ -130,11 +134,11 @@ const NetworkGraph = ({data}: {data: any}) => {
             .style("font-size", "12px")
             .attr("x", 0)
             .attr("y", 0)
-            .attr("dy", (d) => (-1) * (d.size - 10));
+            .attr("dy", (d: any) => (-1) * (d.size - 10));
 
-        node.on('mouseover', function(d) {
+        node.on('mouseover', function(d: any) {
 
-            link.style('stroke-width', function(l) {
+            link.style('stroke-width', function(l: any) {
                 if (d === l.source || d === l.target) {
                     return 2
                 } else {
@@ -142,7 +146,7 @@ const NetworkGraph = ({data}: {data: any}) => {
                 }
             });
 
-            node.style('opacity', function(l) {
+            node.style('opacity', function(l: any) {
                 for (let i = 0; i < data.links.length; i++) {
                     if ((data.links[i].source === d || data.links[i].target === d) && (data.links[i].source === l || data.links[i].target === l)) {
                         return 1
@@ -155,7 +159,7 @@ const NetworkGraph = ({data}: {data: any}) => {
                 }
             });
 
-            link.style('opacity', function(l) {
+            link.style('opacity', function(l: any) {
                 if (d === l.source || d === l.target) {
                     return 1
                 } else {
@@ -163,7 +167,7 @@ const NetworkGraph = ({data}: {data: any}) => {
                 }
             })
 
-            label.style('opacity', function(l) {
+            label.style('opacity', function(l: any) {
                 for (let i = 0; i < data.links.length; i++) {
                     if ((data.links[i].source === d || data.links[i].target === d) && (data.links[i].source === l || data.links[i].target === l)) {
                         return 1
@@ -187,6 +191,7 @@ const NetworkGraph = ({data}: {data: any}) => {
 
         const zoom = d3.zoom()
             .on('zoom', function() {
+                // @ts-ignore
                 const { transform } = d3.event;
                 link.attr('transform', transform);
                 node.attr('transform', transform);
@@ -197,12 +202,12 @@ const NetworkGraph = ({data}: {data: any}) => {
         zoom.scaleTo(svg.transition().duration(750), 0.65);
 
         simulation.on("tick", () => {
-            link.attr("x1", function (d) { return d.source.x; })
-                .attr("y1", function (d) { return d.source.y; })
-                .attr("x2", function (d) {
+            link.attr("x1", function (d: any) { return d.source.x; })
+                .attr("y1", function (d: any) { return d.source.y; })
+                .attr("x2", function (d: any) {
                     return calculateX(d.target.x, d.target.y, d.source.x, d.source.y, d.target.size);
                 })
-                .attr("y2", function (d) {
+                .attr("y2", function (d: any) {
                     return calculateY(d.target.x, d.target.y, d.source.x, d.source.y, d.target.size);
                 });
 
@@ -216,7 +221,7 @@ const NetworkGraph = ({data}: {data: any}) => {
                 });
         });
 
-        function calculateX(tx, ty, sx, sy, radius){
+        function calculateX(tx: number, ty: number, sx: number, sy: number, radius: number){
             if(tx == sx) return tx;
             const xLength = Math.abs(tx - sx);
             const yLength = Math.abs(ty - sy);
@@ -225,7 +230,7 @@ const NetworkGraph = ({data}: {data: any}) => {
             if(tx > sx)  return tx - xLength * ratio;
             if(tx < sx) return  tx + xLength * ratio;
         }
-        function calculateY(tx, ty, sx, sy, radius){
+        function calculateY(tx: number, ty: number, sx: number, sy: number, radius: number){
             if(ty == sy) return ty;
             const xLength = Math.abs(tx - sx);
             const yLength = Math.abs(ty - sy);

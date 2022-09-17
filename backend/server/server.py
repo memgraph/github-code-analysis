@@ -6,7 +6,6 @@ from os import getenv
 from time import sleep
 from typing import Dict, Optional, List
 
-from mgclient import Node
 from dotenv import load_dotenv
 from flask import Flask, request, Response
 from flask_cors import CORS

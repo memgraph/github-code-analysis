@@ -62,6 +62,7 @@ const NavBar = () => {
     )
 
     return (
+        // @ts-ignore
         <AppBar position="static" color={"warning"}>
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
