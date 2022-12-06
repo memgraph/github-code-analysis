@@ -126,7 +126,7 @@ You will also need to create a `.env.local` file in `./frontend`. It should look
 AUTH_SECRET=<auth key for github autorization - used for jwt token>
 NEXTAUTH_URL=http://localhost:3001
 NEXTAUTH_BACKEND_URL=http://backend:5000
-BACKEND_URL=http://localhost:5000
+BACKEND_URL=http://localhost:5001
 GITHUB_PERMS=repo read:org read:packages read:project read:repo_hook read:user
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=

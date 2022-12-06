@@ -80,7 +80,7 @@ const Search = () => {
             try {
                 const result = await axios({
                     method: "POST",
-                    url: process.env.BACKEND_URL + "/search_repos",
+                    url: process.env.BACKEND_URL + "/search-repos",
                     data: bodyFormData,
                 })
 
@@ -102,7 +102,7 @@ const Search = () => {
                 bodyFormData.append('login', session.data.login as string);
                 const result = await axios({
                     method: "POST",
-                    url: process.env.BACKEND_URL + "/trending_repos",
+                    url: process.env.BACKEND_URL + "/trending-repos",
                     data: bodyFormData,
                 })
                 setTrendingData(result.data);

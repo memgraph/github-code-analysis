@@ -99,7 +99,7 @@ const Repos: NextPage = () => {
                 try {
                     const result = await axios({
                         method: "POST",
-                        url: process.env.BACKEND_URL+"/repos",
+                        url: process.env.BACKEND_URL + "/repos",
                         data: bodyFormData,
                         headers: {"Content-Type": "mutlipart/form-data"}
                     })
@@ -145,7 +145,7 @@ const Repos: NextPage = () => {
                 try {
                     const result = await axios({
                         method: "POST",
-                        url: process.env.BACKEND_URL+"/refresh_repos",
+                        url: process.env.BACKEND_URL + "/refresh-repos",
                         data: bodyFormData,
                         headers: {"Content-Type": "mutlipart/form-data"}
                     })

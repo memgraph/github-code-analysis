@@ -37,7 +37,7 @@ const noDataView = (
                     No data found
                 </Typography>
                 <Typography textAlign={"center"} variant={"body1"}>
-                    Try refreshing the graph by pressing the button on the bottom right corner.
+                    Try refreshing the graph by pressing the button in the bottom right corner.
                 </Typography>
 
             </Grid>
@@ -97,7 +97,7 @@ const Repo : NextPage = () => {
                 bodyFormData.append("full_name", `${username}/${repo}`);
                 bodyFormData.append("branch", branch);
 
-                const result = await axios.post(`${process.env.BACKEND_URL}/get_commits`, bodyFormData)
+                const result = await axios.post(`${process.env.BACKEND_URL}/get-commits`, bodyFormData)
 
                 if (result.status === 404) {
                     setError("Branch not found")
@@ -131,7 +131,7 @@ const Repo : NextPage = () => {
                 bodyFormData.append('login', session.data.login as string);
                 bodyFormData.append("full_name", `${username}/${repo}`);
 
-                const result = await axios.post(process.env.BACKEND_URL + "/get_branches", bodyFormData)
+                const result = await axios.post(process.env.BACKEND_URL + "/get-branches", bodyFormData)
                 console.log("result", result.data)
 
 
@@ -172,7 +172,7 @@ const Repo : NextPage = () => {
                 bodyFormData.append('login', session.data.login as string);
                 bodyFormData.append("full_name", `${username}/${repo}`);
 
-                const result = await axios.post(process.env.BACKEND_URL + "/refresh_branches", bodyFormData)
+                const result = await axios.post(process.env.BACKEND_URL + "/refresh-branches", bodyFormData)
                 console.log("result", result.data)
 
 
@@ -212,7 +212,7 @@ const Repo : NextPage = () => {
                 bodyFormData.append("full_name", `${username}/${repo}`);
                 bodyFormData.append("branch", selectedBranch as string);
 
-                const result = await axios.post(process.env.BACKEND_URL + "/refresh_commits", bodyFormData)
+                const result = await axios.post(process.env.BACKEND_URL + "/refresh-commits", bodyFormData)
                 console.log("result", result.data)
 
                 if (result.status === 404) {
@@ -252,7 +252,7 @@ const Repo : NextPage = () => {
                 bodyFormData.append("commit", commit);
                 bodyFormData.append("branch", branch);
 
-                const result = await axios.post(process.env.BACKEND_URL + "/get_graphs", bodyFormData)
+                const result = await axios.post(process.env.BACKEND_URL + "/get-graphs", bodyFormData)
                 console.log("result", result.data)
 
                 if (result.status === 404) {
@@ -293,7 +293,7 @@ const Repo : NextPage = () => {
                 bodyFormData.append("full_name", `${username}/${repo}`);
                 bodyFormData.append("branch", branch);
 
-                const result = await axios.post(process.env.BACKEND_URL + "/start_graph_builder", bodyFormData)
+                const result = await axios.post(process.env.BACKEND_URL + "/start-graph-builder", bodyFormData)
                 console.log("result", result.data)
 
                 if (result.status === 404) {

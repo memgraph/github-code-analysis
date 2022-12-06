@@ -1,12 +1,25 @@
-import time
+from enum import Enum
+from re import match, findall
+from typing import Dict
 
 from appcore.DatabaseIngest.DBIngestImpls.CodeAnalysisImpls.ImportsAnalyserInterface import ImportsAnalyserInterface
 from appcore.DatabaseIngest.DBIngestImpls.CodeAnalysisImpls.LanguageTypeCheckerInterface import \
     LanguageTypeCheckerInterface
-from typing import Dict
-from appcore.KafkaClient.CoreKafkaProducer import CoreKafkaProducer
 from appcore.GitUtils.GitFileUtils import GitFileConstants
-from re import match, findall
+from appcore.KafkaClient.CoreKafkaProducer import CoreKafkaProducer
+
+
+class PythonRegexConstants(Enum):
+    REMOVE_AS_REGEX: str = rb"((\w+)[ ]+as[ ]+(\w+))"
+    FROM_IMPORT_REGEX: str = rb"^from\s+([\w.]+)\s+import\s*([\w, ]*)"
+    NUMBER_OF_DOTS_REGEX: str = rb"(^[.]*)"
+    IMPORT_REGEX: str = rb"^import\s+([\w ,]+)"
+    STRING_SINGLE_QUOTATION_REGEX: str = rb"(\'.*\')"
+    STRING_DOUBLE_QUOTATION_REGEX: str = rb"(\".*\")"
+
+
+def _extract_filename_from_data(data: Dict) -> str:
+    return data.get("filename")
 
 
 class PythonCodeAnalyser(ImportsAnalyserInterface, LanguageTypeCheckerInterface):
@@ -14,7 +27,7 @@ class PythonCodeAnalyser(ImportsAnalyserInterface, LanguageTypeCheckerInterface)
         self._kafka_producer = CoreKafkaProducer()
 
     def can_analyse_file(self, data: Dict) -> bool:
-        filename = data.get("filename")
+        filename = _extract_filename_from_data(data)
         if filename.endswith(".py"):
             return True
         return False
@@ -23,7 +36,7 @@ class PythonCodeAnalyser(ImportsAnalyserInterface, LanguageTypeCheckerInterface)
         return code.count(import_name)
 
     def analyse_imports(self, data: Dict) -> None:
-        filename = GitFileConstants.REPO_DOWNLOAD_EXTRACTION_FILEPATH.value + "/" + data.get("filename")
+        filename = f"{GitFileConstants.REPO_DOWNLOAD_EXTRACTION_FILEPATH.value}/{_extract_filename_from_data(data)}"
         imports = {}
         translation_layer = {}
         code = []
@@ -33,7 +46,7 @@ class PythonCodeAnalyser(ImportsAnalyserInterface, LanguageTypeCheckerInterface)
             for line in opened_file.readlines():
                 line = line.replace(b'\n', b'').split(b"#")[0].strip()
                 code.append(line)
-                remove_as = findall(rb"((\w+)[ ]+as[ ]+(\w+))", line)
+                remove_as = findall(PythonRegexConstants.REMOVE_AS_REGEX.value, line)
                 for original, remove, replaced in remove_as:
                     line = line.replace(remove, b"")
 
@@ -60,14 +73,14 @@ class PythonCodeAnalyser(ImportsAnalyserInterface, LanguageTypeCheckerInterface)
                     more_lines = False
                     continue
 
-                from_import_match = match(rb"^from\s+([\w.]+)\s+import\s*([\w, ]*)", line)
+                from_import_match = match(PythonRegexConstants.FROM_IMPORT_REGEX.value, line)
                 if from_import_match is not None:
                     for original, remove, replaced in remove_as:
                         translation_layer[original] = replaced
                     files = from_import_match.group(1)
                     if files.startswith(b"."):
-                        number_of_dots = match(rb"(^[.]*)", files).group(1).count(b".")
-                        files = b".".join(data.get("filename").encode("utf-8").split(b"/")[:number_of_dots*(-1)]) + b"." + files[number_of_dots:]
+                        number_of_dots = match(PythonRegexConstants.NUMBER_OF_DOTS_REGEX.value, files).group(1).count(b".")
+                        files = b".".join(_extract_filename_from_data(data).encode("utf-8").split(b"/")[:number_of_dots*(-1)]) + b"." + files[number_of_dots:]
                     if b"\\" in line or b"(" in line:
                         more_lines = True
                         current_import = files
@@ -78,10 +91,10 @@ class PythonCodeAnalyser(ImportsAnalyserInterface, LanguageTypeCheckerInterface)
                             imports[files][imported] = 0
                     continue
 
-                elif match(rb"^import\s+([\w ,]+)", line):
+                elif match(PythonRegexConstants.IMPORT_REGEX.value, line):
                     for original, remove, replaced in remove_as:
                         translation_layer[original] = replaced
-                    files = match(rb"import\s*([\w ,]+)", line).group(1)
+                    files = match(PythonRegexConstants.IMPORT_REGEX.value, line).group(1)
                     imports[files] = 0
                     if b"\\" in line or b"(" in line:
                         more_lines = True
@@ -91,10 +104,10 @@ class PythonCodeAnalyser(ImportsAnalyserInterface, LanguageTypeCheckerInterface)
 
             joined_code = b' '.join(code)
 
-            for big_string in findall(rb"(\".*\")", joined_code):
+            for big_string in findall(PythonRegexConstants.STRING_DOUBLE_QUOTATION_REGEX.value, joined_code):
                 joined_code = joined_code.replace(big_string, b"")
 
-            for big_string in findall(rb"(\'.*\')", joined_code):
+            for big_string in findall(PythonRegexConstants.STRING_SINGLE_QUOTATION_REGEX.value, joined_code):
                 joined_code = joined_code.replace(big_string, b"")
 
             memgraph_imports = {}
@@ -115,6 +128,6 @@ class PythonCodeAnalyser(ImportsAnalyserInterface, LanguageTypeCheckerInterface)
         self._kafka_producer.produce_db_objects({"type": "imports_dependency",
                                                  "data": {
                                                      "imports": memgraph_imports,
-                                                     "filename": data.get("filename"),
-                                                     "root_path": data.get("filename").split("/")[0],
+                                                     "filename": _extract_filename_from_data(data),
+                                                     "root_path": _extract_filename_from_data(data).split("/")[0],
                                                  }})

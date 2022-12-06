@@ -202,7 +202,7 @@ def start_filetree_creation(username: str, repo_name: str, access_token: str, co
 ## Routes
 
 
-@app.route("/trending_repos", methods=["POST"])
+@app.route("/trending-repos", methods=["POST"])
 def get_trending_repos():
     check = check_necessary_data(
         necessary_data={
@@ -248,32 +248,6 @@ def register_user():
     return Response(json.dumps({"login": True}), status=200)
 
 
-@app.route("/", methods=["POST"])
-def run_repo_parser():
-    producer.send(
-        ServerConstants.KAFKA_TO_CORE_TOPIC.value,
-        ServerConstants.KAFKA_DOWNLOAD_AND_GET_ALL_FORMAT.value.format(
-            username=request.form.get("user"),
-            repo_name=request.form.get("repo"),
-            commit_sha=request.form.get("commit_hash"),
-            access_token=request.form["access_token"],
-        ).encode("utf-8"),
-    )
-    producer.close()
-
-    return Response(
-        json.dumps(
-            ServerConstants.KAFKA_DOWNLOAD_AND_GET_ALL_FORMAT.value.format(
-                username=request.form.get("user"),
-                repo_name=request.form.get("repo"),
-                commit_sha=request.form.get("commit_hash"),
-                access_token=request.form["access_token"],
-            )
-        ),
-        status=200,
-    )
-
-
 @app.route("/repos", methods=["POST"])
 def get_all_user_repos():
     check = check_necessary_data(
@@ -290,7 +264,7 @@ def get_all_user_repos():
     return Response(get_all_user_repositories(username=request.form.get("login")), status=200)
 
 
-@app.route("/refresh_repos", methods=["POST"])
+@app.route("/refresh-repos", methods=["POST"])
 def refresh_repos():
     check = check_necessary_data(
         necessary_data={
@@ -365,7 +339,7 @@ def refresh_repos():
     return Response(get_all_user_repositories(username=request.form.get("login")), status=200)
 
 
-@app.route("/search_repos", methods=["POST"])
+@app.route("/search-repos", methods=["POST"])
 def search_repos():
     check = check_necessary_data(
         necessary_data={
@@ -400,14 +374,7 @@ def search_repos():
     return Response(json.dumps(search_results), status=200)
 
 
-@app.route("/test", methods=["GET"])
-def test():
-    file_utils = FileUtils(memgraph)
-    # kek = file_utils.get_filetree_for_commit(commit_id="0b9d5a5d88eee31e0fe52a6af97354274e981958")
-    return Response(str(file_utils.get_dependencies("7fbec93709fb1fb91a484d36fc063a1f4ee903f3")), status=200)
-
-
-@app.route("/verify_repo", methods=["POST"])
+@app.route("/verify-repo", methods=["POST"])
 def verify_repo():
     check = check_necessary_data(
         necessary_data={
@@ -428,7 +395,7 @@ def verify_repo():
     return Response(status=404)
 
 
-@app.route("/get_branches", methods=["POST"])
+@app.route("/get-branches", methods=["POST"])
 def get_branches():
     check = check_necessary_data(
         necessary_data={
@@ -486,7 +453,7 @@ def get_branches():
     return Response(json.dumps({"branches": formatted_branches, "default_branch": default_branch}), status=200)
 
 
-@app.route("/refresh_branches", methods=["POST"])
+@app.route("/refresh-branches", methods=["POST"])
 def refresh_branches():
     check = check_necessary_data(
         necessary_data={
@@ -551,7 +518,7 @@ def refresh_branches():
     return Response(json.dumps({"branches": formatted_branches, "default_branch": default_branch}), status=200)
 
 
-@app.route("/get_commits", methods=["POST"])
+@app.route("/get-commits", methods=["POST"])
 def get_commits():
     check = check_necessary_data(
         necessary_data={
@@ -609,7 +576,7 @@ def get_commits():
     return Response(json.dumps(formatted_commits), status=200)
 
 
-@app.route("/refresh_commits", methods=["POST"])
+@app.route("/refresh-commits", methods=["POST"])
 def refresh_commits():
     check = check_necessary_data(
         necessary_data={
@@ -664,7 +631,7 @@ def refresh_commits():
     return Response(json.dumps(formatted_commits), status=200)
 
 
-@app.route("/get_graphs", methods=["POST"])
+@app.route("/get-graphs", methods=["POST"])
 def get_graphs():
     check = check_necessary_data(
         necessary_data={
@@ -701,7 +668,6 @@ def get_graphs():
         return Response(json.dumps({"data": {}, "status": "new"}), status=200)
 
     file_utils = FileUtils(memgraph)
-    #files = file_utils.get_filetree_for_commit(commit_id=commit.commit_id)
     files = file_utils.get_filetree_for_commit(commit_id=commit.commit_id)
     dependencies = file_utils.get_dependencies(commit_id=commit.commit_id)
 
@@ -718,7 +684,7 @@ def get_graphs():
     return Response(json.dumps({"data": graphs, "status": status}), status=200)
 
 
-@app.route("/start_graph_builder", methods=["POST"])
+@app.route("/start-graph-builder", methods=["POST"])
 def start_graph_builder():
     check = check_necessary_data(
         necessary_data={

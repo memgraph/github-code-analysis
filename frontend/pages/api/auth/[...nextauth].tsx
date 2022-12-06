@@ -37,7 +37,7 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
           refresh_token: refresh_data.refresh_token ?? token.refresh_token,
         }
     } catch (error) {
-      console.log("error", error)
+      console.log("error")
   
       return {
         ...token,
@@ -89,6 +89,7 @@ export default NextAuth({
         },
         signIn: async ({ user, account, profile, email, credentials }): Promise<boolean> => {
             try {
+
               var bodyFormData = new FormData();
               bodyFormData.append("access_token", account.access_token);
               bodyFormData.append('login', profile.login as string);
@@ -106,7 +107,7 @@ export default NextAuth({
               }
 
             } catch (error) {
-              console.log("error", error)
+              console.log("error")
             }
             
             return false;

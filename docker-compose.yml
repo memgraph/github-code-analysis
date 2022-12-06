@@ -70,7 +70,7 @@ services:
     volumes:
       - ./backend:/usr/src/backend
     ports:
-      - "5000:5000"
+      - "5001:5000"
     environment:
       - MG_HOST=memgraph
       - MG_PORT=7687
