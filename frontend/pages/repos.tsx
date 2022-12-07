@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { useSession, signIn } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { Zoom, Grow, Box, List, ListItem, ListItemAvatar, Avatar, ListItemText, Grid, Paper, Divider, Typography, Chip, Backdrop, CircularProgress, IconButton, ButtonGroup, Snackbar, Alert, Input, InputLabel, InputAdornment, ListItemIcon } from "@mui/material";
+import { Zoom, Grow, Box, List, ListItem, ListItemText, Grid, Paper, Divider, Typography, Chip, Backdrop, CircularProgress, IconButton, ButtonGroup, Snackbar, Alert, Input, InputAdornment} from "@mui/material";
 import LoadingButton  from "@mui/lab/LoadingButton";
 import PublicIcon from '@mui/icons-material/Public';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -99,12 +99,11 @@ const Repos: NextPage = () => {
                 try {
                     const result = await axios({
                         method: "POST",
-                        url: process.env.BACKEND_URL+"/repos",
+                        url: process.env.BACKEND_URL + "/repos",
                         data: bodyFormData,
                         headers: {"Content-Type": "mutlipart/form-data"}
                     })
 
-                    console.log(result)
                     setOpen(false);
                     setRefreshLoading(false);
     
@@ -113,6 +112,7 @@ const Repos: NextPage = () => {
                         setSearchData(result.data.repos)
                         setRepos(result.data.repos)
                         setStarredRepos(result.data.starred)
+                        setFilterTo(0)
                     } else {
                         setSnackOpen(true)
                     }
@@ -121,6 +121,7 @@ const Repos: NextPage = () => {
                     setOpen(false)
                     setSnackOpen(true)
                     setRefreshLoading(false);
+                    signIn()
                     return                     
                 }
             }
@@ -144,12 +145,11 @@ const Repos: NextPage = () => {
                 try {
                     const result = await axios({
                         method: "POST",
-                        url: process.env.BACKEND_URL+"/refresh_repos",
+                        url: process.env.BACKEND_URL + "/refresh-repos",
                         data: bodyFormData,
                         headers: {"Content-Type": "mutlipart/form-data"}
                     })
 
-                    console.log(result)
                     setOpen(false);
                     setRefreshLoading(false)
         
@@ -158,6 +158,7 @@ const Repos: NextPage = () => {
                         setSearchData(result.data.repos)
                         setRepos(result.data.repos)
                         setStarredRepos(result.data.starred)
+                        setFilterTo(0)
                     } else {
                         setSnackOpen(true)
                     }
@@ -185,17 +186,19 @@ const Repos: NextPage = () => {
             <Snackbar open={snackOpen} autoHideDuration={5000} onClose={() => setSnackOpen(false)}>
                 <Alert severity="error">An error occurred while getting repository data!</Alert>
             </Snackbar>
+            <Box>
 
+            </Box>
             <Grow in={!open}>
-                <Grid container justifyContent={"center"} sx={{mt: "20px", mb:"5px"}}>
+                <Grid container justifyContent={"center"} sx={{mt: "40px", mb:"5px"}}>
                     <Grid item lg={6} md={8} sm={8} xs={11}>
                         <Grid container justifyContent={"space-between"} alignContent={"end"}>
                             <Grid item lg={6} md={6} sm={6} xs={6}>
                                 <ButtonGroup size={"small"} variant="outlined" aria-label="outlined button group">
-                                    <IconButton onClick={() => filterAll()}><PublicIcon color={filter[0] ? "primary" : "inherit"} /></IconButton>
-                                    <IconButton onClick={() => filterPersonal()}><PersonIcon color={filter[1] ? "primary" : "inherit"} /></IconButton>
-                                    <IconButton onClick={() => filterPrivate()}><VisibilityIcon color={filter[2] ? "primary" : "inherit"} /></IconButton>
-                                    <IconButton onClick={() => filterStarred()}><StarIcon color={filter[3] ? "primary" : "inherit"} /></IconButton>
+                                    <IconButton onClick={() => filterAll()}><PublicIcon color={filter[0] ? "primary" : "secondary"} /></IconButton>
+                                    <IconButton onClick={() => filterPersonal()}><PersonIcon color={filter[1] ? "primary" : "secondary"} /></IconButton>
+                                    <IconButton onClick={() => filterPrivate()}><VisibilityIcon color={filter[2] ? "primary" : "secondary"} /></IconButton>
+                                    <IconButton onClick={() => filterStarred()}><StarIcon color={filter[3] ? "primary" : "secondary"} /></IconButton>
                                 </ButtonGroup>
                             </Grid>
                             <Grid item lg={6} md={6} sm={6} xs={6}>
@@ -203,10 +206,12 @@ const Repos: NextPage = () => {
                                     <Input
                                         id="standard-adornment-password"
                                         type={'text'}
+                                        color={"primary"}
                                         endAdornment={
                                         <InputAdornment position="end">
                                             <IconButton
                                             aria-label="toggle password visibility"
+                                            color={"primary"}
                                             >
                                                 <SearchIcon />
                                             </IconButton>
@@ -218,24 +223,24 @@ const Repos: NextPage = () => {
                                 </Box>
                             </Grid>
                         </Grid>
-                        
+
                     </Grid>
                 </Grid>
             </Grow>
-            
+
             <Zoom in={!open}>
                 <Grid container justifyContent={"center"} alignContent={"center"}>
-                    <Grid item lg={6} md={8} sm={10} xs={11}>
-                        <Paper elevation={2}>
-                            <List sx={{ maxHeight: "70vh", overflow: "auto", width: '100%', bgcolor: 'white', pt: "0", pb: "0" }}>
+                    <Grid item lg={6} md={8} sm={10} xs={11} sx={{borderRadius: "10px"}}>
+                        <Paper elevation={2} >
+                            <List sx={{ maxHeight: "75vh", overflow: "auto", width: '100%', bgcolor: 'white', pt: "0", pb: "0" }}>
                                 <ListItem button onClick={() => refresh()}>
                                     <Grid container justifyContent={"center"} alignContent={"center"}>
                                         <Grid item lg={6} md={6} sm={6} xs={6}>
-                                            <Box textAlign={"center"}><LoadingButton disableRipple sx={{backgroundColor: "transparent", "&.MuiButtonBase-root:hover": {bgcolor: "transparent"}}} color="inherit" size="large" loading={refreshLoading} variant="text"> <RefreshIcon /> </LoadingButton></Box>
-                                            
+                                            <Box textAlign={"center"}><LoadingButton disableRipple sx={{backgroundColor: "transparent", "&.MuiButtonBase-root:hover": {bgcolor: "transparent"}}} color="primary" size="large" loading={refreshLoading} variant="text"> <RefreshIcon /> </LoadingButton></Box>
+
                                         </Grid>
                                     </Grid>
-                                        
+
                                 </ListItem>
                                 {data.map((repo, index) => (
                                     <React.Fragment key={index}>
@@ -243,24 +248,24 @@ const Repos: NextPage = () => {
                                             <>
                                                 <Box sx={{display: {xs: "none", sm: "inline-block"}}}>
                                                     {repo.languages.map((language, lang_index) => {
-                                                        let style = {mr: "5px"}
-                                                        if (lang_index > 2) {
-                                                            style = {mr: "5px", display: {sm: "none", md: "none", lg: "inline-flex"}} as any
+                                                        let style = {mr: "5px", color: "white"}
+                                                        if (lang_index > 3) {
+                                                            style = {mr: "5px", display: {sm: "none", md: "none", lg: "inline-flex", color: "white"}} as any
                                                         }
-                                                        if(lang_index > 4) {
+                                                        if(lang_index > 3) {
                                                             return <React.Fragment key={lang_index}></React.Fragment>
                                                         }
-                                                        return <Chip key={lang_index} size="small" label={language} sx={style} />
+                                                        return <Chip key={lang_index} color={"primary"} size="small" label={language} sx={style} />
                                                     })}
                                                 </Box>
-                                                <IconButton edge="end" href={repo.github_url}><GitHubIcon /></IconButton>
+                                                <IconButton color={"secondary"} edge="end" href={repo.github_url}><GitHubIcon /></IconButton>
                                             </>
                                         }>
                                             <ListItemText
-                                                onClick={() => router.push("/repo/"+repo.full_name)}  
+                                                onClick={() => router.push("/repo/"+repo.full_name)}
                                                 primary={
-                                                    <Typography variant={"body1"} noWrap={false} textAlign={"left"}>{repo.full_name} <Chip size={"small"} label={repo.public ? "Public": "Private"} variant="outlined" component={"span"}/></Typography>
-                                                } 
+                                                    <Typography variant={"body1"} noWrap={false} textAlign={"left"}>{repo.full_name} <Chip size={"small"} label={repo.public ? "Public": "Private"} color={"primary"} variant="outlined" component={"span"}/></Typography>
+                                                }
                                                 secondary={
                                                     <Box sx={{pt: {xs: "5px", sm: 0}, display: "inline-block"}} component="span">
                                                         <Typography variant="body2" component={"span"} sx={{mr: "5px"}}>{repo.updated_at}</Typography>
@@ -271,21 +276,21 @@ const Repos: NextPage = () => {
                                                                 }
 
                                                                 if (lang_index > 0) {
-                                                                    return <Chip key={lang_index} size="small" label={language} component="span" sx={{ml: "5px"}}/>
+                                                                    return <Chip key={lang_index} color={"primary"} variant="filled" size="small" label={language} component="span" sx={{ml: "5px", color: "white"}}/>
                                                                 }
 
-                                                                return <Chip key={lang_index} size="small" label={language} component="span"/>
+                                                                return <Chip key={lang_index} color={"primary"} variant="filled" size="small" label={language} component="span" sx={{color: "white"}}/>
                                                             })}
                                                         </Box>
                                                     </Box>
-                                                    
+
                                                 } />
                                         </ListItem>
 
                                         {index !== data.length - 1 && <Divider variant="middle" component="li" />}
                                     </React.Fragment>
-                                    
-                                    
+
+
                                 ))}
                             </List>
                         </Paper>

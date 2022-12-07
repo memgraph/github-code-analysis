@@ -1,9 +1,8 @@
-import { NextPage, NextPageContext } from "next";
 import { Snackbar, Alert, Grid, List, Container, Skeleton, Typography, CircularProgress, IconButton, InputBase, Divider, Paper, Collapse, Card, CardContent, CardActions, Box, CardActionArea, Backdrop, ListItem, ListItemText } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import GitHub from "@mui/icons-material/GitHub";
-import React, { FormEvent, useState, useEffect, useRef, Component } from "react";
+import React, { FormEvent, useState, useEffect, useRef } from "react";
 import { useSession, signIn } from "next-auth/react";
 import axios from "axios";
 import { LoadingButton } from "@mui/lab";
@@ -55,10 +54,11 @@ for (let i = 0; i < numberOfTrendingRepositories; i++) {
 }
 
 
-const Search = ({query}: {query: any}) => {
+const Search = () => {
     const session = useSession()
     const router = useRouter()
-    const [search, setSearch] = useState("");
+    const [search, setSearch] = useState<undefined | string>("");
+    const [query, setQuery] = useState<undefined | string>(undefined);
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [searchLoading, setSearchLoading] = useState(false);
     const [trending, setTrending] = useState(false);
@@ -66,8 +66,81 @@ const Search = ({query}: {query: any}) => {
     const [trendingLoading, setTrendingLoading] = useState(false);
     const [trendingData, setTrendingData] = useState<TrendingRepository[]>([]);
     const [snackOpen, setSnackOpen] = useState(false);
-    
-    const { q } = query
+
+    const { q } = router.query as { q: string }
+    const loadTrending = useRef(true);
+
+    const getSearchResults = async () => {
+        if (session.status === "authenticated") {
+            const bodyFormData = new FormData();
+            bodyFormData.append('access_token', session.data.access_token as string);
+            bodyFormData.append('login', session.data.login as string);
+            bodyFormData.append('query', q as string);
+
+            try {
+                const result = await axios({
+                    method: "POST",
+                    url: process.env.BACKEND_URL + "/search-repos",
+                    data: bodyFormData,
+                })
+
+                setSearchResults(result.data);
+                setSearchLoading(false);
+            } catch {
+                setSearchLoading(false);
+                setSnackOpen(true);
+                signIn();
+            }
+        }
+    }
+
+    const getTrendingRepositories = async () => {
+        if (session.status === "authenticated") {
+            try {
+                const bodyFormData = new FormData();
+                bodyFormData.append('access_token', session.data.access_token as string);
+                bodyFormData.append('login', session.data.login as string);
+                const result = await axios({
+                    method: "POST",
+                    url: process.env.BACKEND_URL + "/trending-repos",
+                    data: bodyFormData,
+                })
+                setTrendingData(result.data);
+                setTrendingLoading(false);
+            } catch {
+                setTrendingLoading(false);
+                setSnackOpen(true);
+                signIn();
+            }
+        }
+    }
+
+    useEffect(() => {
+        if (session.status === "authenticated") {
+            console.log("bitch", q, search)
+            if (q !== undefined) {
+                if (q !== query) {
+                    loadTrending.current = true
+                    setSearch(q);
+                    setQuery(q)
+                    setSearchLoading(true);
+                    setShowCloseButton(true);
+                    setTrending(false);
+                    setTrendingLoading(false)
+                    getSearchResults();
+                }
+            } else if (loadTrending.current) {
+                loadTrending.current = false
+                setSearch("");
+                setSearchLoading(false);
+                setShowCloseButton(false);
+                setSearchResults([]);
+                setTrending(true);
+                setTrendingLoading(true);
+                getTrendingRepositories();
+            }
+        }
+    }, [router.query, session])
 
     useEffect(() => {
         if (session.status === "unauthenticated") {
@@ -75,73 +148,12 @@ const Search = ({query}: {query: any}) => {
         }
     } , [session])
 
-    useEffect(() => {
-        if (session.status === "authenticated") {
-            if (q) {
-                setSearch(q);
-                setSearchLoading(true);  
-                setShowCloseButton(true);
-                setTrending(false);
-                setTrendingLoading(false)
-
-                const getSearchResults = async () => {
-                    var bodyFormData = new FormData();
-                    bodyFormData.append('access_token', session.data.access_token as string);
-                    bodyFormData.append('login', session.data.login as string);
-                    bodyFormData.append('query', q as string);
-                    
-                    try {
-                        const result = await axios({
-                            method: "POST",
-                            url: process.env.BACKEND_URL + "/search_repos",
-                            data: bodyFormData,
-                        })
-            
-                        setSearchResults(result.data);
-                        setSearchLoading(false);
-                    } catch {
-                        setSearchLoading(false);
-                        setSnackOpen(true);
-                    }
-                }
-                
-                getSearchResults();
-
-            } else {
-                setSearch("");
-                setSearchLoading(false);
-                setShowCloseButton(false);
-                setSearchResults([]);
-                setTrending(true);
-                setTrendingLoading(true);
-                const getTredingRepositories = async () => {
-                    try {
-                        var bodyFormData = new FormData();
-                        bodyFormData.append('access_token', session.data.access_token as string);
-                        bodyFormData.append('login', session.data.login as string);
-                        const result = await axios({
-                            method: "POST",
-                            url: process.env.BACKEND_URL + "/trending_repos",
-                            data: bodyFormData,
-                        })
-                        setTrendingData(result.data);
-                        setTrendingLoading(false);
-                    } catch {
-                        setTrendingLoading(false);
-                        setSnackOpen(true);
-                    }
-                }
-                getTredingRepositories();
-            }
-        }
-    }, [session, q]); // This works but it refreshes the page every time you alt tab back into the app.
-
 
     const searchFunction = async (event: FormEvent) => {
         event.preventDefault();
 
-        if (session.status === "authenticated" && search.length > 0) {
-            router.push({
+        if (session.status === "authenticated" && (search ?? "").length > 0) {
+            await router.push({
                 pathname: "/search",
                 query: {
                     q: search
@@ -175,6 +187,7 @@ const Search = ({query}: {query: any}) => {
                         sx={{ ml: 1, flex: 1 }}
                         placeholder="Search GitHub Repositories"
                         inputProps={{ 'aria-label': 'search github' }}
+                        name={"search"}
                         value={search}
                         autoFocus
                         onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
@@ -194,7 +207,7 @@ const Search = ({query}: {query: any}) => {
             </Grid>
             <Container sx={{mt:"50px", mb: "50px"}}>
                 <Grid container justifyContent={"center"} alignItems={"center"} direction={"row"} spacing={3}>
-                    {trendingLoading && loadingTrendingItems.map((item, index) => item)}
+                    {trendingLoading && loadingTrendingItems.map((item) => item)}
 
                     {trending && trendingData.map((repo: TrendingRepository, index) => (
                         <Grid item lg={4} md={6} sm={6} xs={11} key={index}>
@@ -211,7 +224,7 @@ const Search = ({query}: {query: any}) => {
                                     <CardActions>
                                         <Grid container justifyContent={"center"} alignItems={"center"} direction={"row"} spacing={1}>
                                             <Grid item lg={12}>
-                                                <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}><GitHub /></Box>
+                                                <Box sx={{display: "flex", justifyContent: "center", alignItems: "center"}}><GitHub color={"secondary"} /></Box>
                                             </Grid>
                                         </Grid>
                                     </CardActions>
@@ -222,38 +235,34 @@ const Search = ({query}: {query: any}) => {
                 </Grid>
                 
                 <Backdrop sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }} open={searchLoading}><CircularProgress color="inherit" /></Backdrop>
-
-                <List>
-                    {searchResults.map((repo: SearchResult, index) => (
-                        <React.Fragment key={index}>
-                            <ListItem button  secondaryAction={
-                                <>
-                                    <IconButton edge="end" href={repo.github_url}><GitHub /></IconButton>
-                                </>
-                            }>
-                                <ListItemText onClick={() => router.push("/repo/"+repo.full_name)} primary={repo.full_name} secondary={
+                <Paper elevation={2} >
+                    <List sx={{pb: 0, pt: 0}}>
+                        {searchResults.map((repo: SearchResult, index) => (
+                            <React.Fragment key={index}>
+                                <ListItem button  secondaryAction={
                                     <>
-                                        <Typography variant="body2" component="span" sx={{color: "text.secondary"}}>{repo.description}</Typography>
-                                        <Typography variant="body2" component="span" sx={{color: "text.secondary", display: "block"}}>Language: {repo.language}</Typography>
+                                        <IconButton edge="end" href={repo.github_url}><GitHub color={"secondary"} /></IconButton>
                                     </>
-                                    
-                                } />
-                            </ListItem>
-                            <Divider />
-                        </React.Fragment>
+                                }>
+                                    <ListItemText onClick={() => router.push("/repo/"+repo.full_name)} primary={repo.full_name} secondary={
+                                        <>
+                                            <Typography variant="body2" component="span" sx={{color: "text.secondary"}}>{repo.description}</Typography>
+                                            <Typography variant="body2" component="span" sx={{color: "text.secondary", display: "block"}}>Language: {repo.language}</Typography>
+                                        </>
 
-                        
-                    ))}
+                                    } />
+                                </ListItem>
+                                <Divider />
+                            </React.Fragment>
 
-                </List>
+
+                        ))}
+
+                    </List>
+                </Paper>
             </Container>
         </>
     )
-}
-
-
-Search.getInitialProps = ({query}: {query: any}) => {
-    return {query}
 }
 
 

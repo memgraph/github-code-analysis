@@ -20,6 +20,7 @@ class RepoUtils:
             updated_at=repo_dict.get("updated_at"),
             languages=repo_dict.get("languages"),
             github_url=repo_dict.get("github_url"),
+            default_branch=repo_dict.get("default_branch"),
         )
 
     def map_repo_object_to_json(self, repo_node: Repo, is_starred=False) -> Dict:
@@ -31,6 +32,7 @@ class RepoUtils:
             "updated_at": datetime.fromtimestamp(repo_node.updated_at).strftime("%d %b, %Y"),
             "languages": repo_node.languages,
             "github_url": repo_node.github_url,
+            "default_branch": repo_node.default_branch,
             "is_starred": is_starred,
         }
 
@@ -42,7 +44,7 @@ class RepoUtils:
                 .to(relationship_type="HAS_REPO", variable="relationship")
                 .node(labels="Repo", variable="r")
                 .where(item="u.username", operator=Operator.EQUAL, expression=f"'{username}'")
-                .return_({"r": "repository", "relationship": "edge"})
+                .return_(results=[("r", "repository"), ("relationship", "edge")])
                 .order_by(properties=("r.updated_at", Order.DESC))
                 .execute()
             )
@@ -54,7 +56,7 @@ class RepoUtils:
             .node(labels="Repo", variable="r")
             .where(item="u.username", operator=Operator.EQUAL, expression=f"'{username}'")
             .and_where(item="relationship.is_starred", operator=Operator.EQUAL, expression=f"{is_starred}")
-            .return_({"r": "repository"})
+            .return_(results=("r", "repository"))
             .order_by(properties=("r.updated_at", Order.DESC))
             .execute()
         )
@@ -73,6 +75,7 @@ class RepoUtils:
                 updated_at=repo.get("updated_at").timestamp(),
                 languages=repo.get("languages"),
                 github_url=repo.get("github_url"),
+                default_branch=repo.get("default_branch"),
             )
             repo_node = self._memgraph_instance.save_node(repo_node)
             self._memgraph_instance.execute(
@@ -81,11 +84,12 @@ class RepoUtils:
 
     def repo_needs_updating(self, repo_dict: Dict, memgraph_repo: Repo) -> bool:
         if (
-            memgraph_repo.updated_at
-            != int(datetime.strptime(repo_dict.get("pushed_at"), "%Y-%m-%dT%H:%M:%SZ").timestamp())
-            or memgraph_repo.name != repo_dict.get("name")
-            or memgraph_repo.full_name != repo_dict.get("full_name")
-            or memgraph_repo.public != (repo_dict.get("visibility", "public") == "public")
+                memgraph_repo.updated_at
+                != int(datetime.strptime(repo_dict.get("pushed_at"), "%Y-%m-%dT%H:%M:%SZ").timestamp())
+                or memgraph_repo.name != repo_dict.get("name")
+                or memgraph_repo.full_name != repo_dict.get("full_name")
+                or memgraph_repo.public != (repo_dict.get("visibility", "public") == "public")
+                or memgraph_repo.default_branch != repo_dict.get("default_branch")
         ):
             print(repo_dict.get("full_name"), memgraph_repo.full_name)
             return True
@@ -110,9 +114,10 @@ class RepoUtils:
             repo_updated_at = int(repo.get("updated_at").timestamp())
             repo_languages = repo.get("languages")
             repo_github_url = repo.get("github_url")
+            repo_default_branch = repo.get("default_branch")
             repo_is_public = repo.get("public")
             self._memgraph_instance.execute(
-                Match()  # Execute doesn't work, it doesn't send query to memgraph
+                Match()
                 .node(labels="Repo", variable="r")
                 .where(item="r.repo_id", operator=Operator.EQUAL, literal=repo_id)
                 .set_(
@@ -126,10 +131,11 @@ class RepoUtils:
                         "languages": repo_languages,
                         "github_url": repo_github_url,
                         "public": repo_is_public,
+                        "default_branch": repo_default_branch,
                     },
                 )
                 .return_()
-                .construct_query()
+                .construct_query()  # Execute doesn't work, it doesn't send query to memgraph
             )
 
     def detach_repositories(self, username: str, repo_list: List[Repo]) -> None:
@@ -142,7 +148,6 @@ class RepoUtils:
                 .where(item="u.username", operator=Operator.EQUAL, expression=f"'{username}'")
                 .and_where(item="r.repo_id", operator=Operator.EQUAL, literal=repo.repo_id)
                 .delete(variable_expressions="relationship")
-                .return_()
                 .construct_query()
             )  # Execute doesn't send the query to Memgraph
 
@@ -163,6 +168,38 @@ class RepoUtils:
                 .return_()
                 .construct_query()
             )
+
+    def repo_exists(self, full_name: str) -> bool:
+        repo = list(Match()
+                    .node(labels="Repo", variable="r")
+                    .where(item="r.full_name", operator=Operator.EQUAL, expression=f"'{full_name}'")
+                    .return_()
+                    .execute())
+        return len(repo) > 0
+
+    def is_repo_connected(self, username: str, full_name: str):
+        repo = list(Match()
+                    .node(labels="User", variable="u")
+                    .to(relationship_type="HAS_REPO", variable="relationship")
+                    .node(labels="Repo", variable="r")
+                    .where(item="u.username", operator=Operator.EQUAL, expression=f"'{username}'")
+                    .and_where(item="r.full_name", operator=Operator.EQUAL, expression=f"'{full_name}'")
+                    .return_()
+                    .execute())
+        return len(repo) > 0
+
+    def connect_repo(self, username: str, full_name: str) -> None:
+        self._memgraph_instance.execute(
+            f"""MATCH (start_node:User), (end_node:Repo) WHERE start_node.username = "{username}" AND end_node.full_name = "{full_name}" MERGE (start_node)-[relationship:HAS_REPO {{is_starred: false}}]->(end_node) RETURN relationship"""
+        )
+
+    def get_default_branch(self, full_name: str) -> str:
+        repo = list(Match()
+                    .node(labels="Repo", variable="r")
+                    .where(item="r.full_name", operator=Operator.EQUAL, expression=f"'{full_name}'")
+                    .return_(results=("r.default_branch", "default_branch"))
+                    .execute())
+        return repo[0].get("default_branch")
 
     @staticmethod
     def remove_unattached_repositories():
