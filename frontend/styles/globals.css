@@ -1,0 +1,39 @@
+body {
+    margin: 0;
+}
+
+.pattern {
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+    z-index: -1;
+    background-color: #F9F9F9;
+    opacity: 0.2;
+    background-image:  radial-gradient(#FB6E00 2.5px, transparent 2.5px), radial-gradient(#FB6E00 2.5px, #F9F9F9 2.5px);
+    background-size: 80px 80px;
+    background-position: 0 0,40px 40px;
+}
+
+svg[name="svg-container-graph-id"] {
+    width: 100% !important;
+    height: 100% !important;
+
+}
+
+#graph-id-graph-wrapper {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+text {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+.index_page_graph {
+    pointer-events: none;
+}

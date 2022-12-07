@@ -1,7 +1,7 @@
-FROM memgraph/memgraph-platform
+FROM memgraph/memgraph-mage:latest
 
-USER memgraph
+USER root
 
 COPY ./Transformations/MessageTranformation.py /var/lib/memgraph/internal_modules/MessageTransformation.py
 
-USER root
+USER memgraph

@@ -1,0 +1,67 @@
+.node__root > circle {
+    fill: #6F2DBD;
+    stroke: transparent;
+    r: 20;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+.node__branch > circle {
+    fill: #6F2DBD;
+    stroke: transparent;
+    r: 20
+}
+
+.node__leaf > circle {
+    fill: #B8D0EB;
+    stroke: transparent;
+    r: 20
+}
+
+.graph_text {
+    font-family: Roboto, Helvetica, Arial, sans-serif !important;
+    z-index: 100;
+    display: inline-block;
+    width: 210px;
+    word-break: break-word;
+}
+
+.elemental_node {
+    font-size: 15px;
+    box-sizing: border-box;
+    color: white;
+    padding: 4px 5px;
+    border-radius: 10px;
+    height: 50px;
+    width: 210px;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 35px 0;
+    background: #FB6E00;
+}
+
+.elemental_node_file {
+    font-size: 15px;
+    box-sizing: border-box;
+    color: white;
+    padding: 4px 5px;
+    border-radius: 10px;
+    height: 50px;
+    width: 210px;
+    font-weight: bold;
+    text-align: center;
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 35px 0;
+    background: #F9AF73;
+}
+
+.path_link {
+    transform: translate(105px, 0px);
+    stroke: #211D1F !important;
+}

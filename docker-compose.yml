@@ -38,20 +38,18 @@ services:
     networks:
       - git-network
 
-  memgraph-platform:
-    container_name: "memgraph"
-    build: "./memgraph"
+  memgraph:
+    container_name: memgraph
+    build: ./memgraph
     ports:
       - "7687:7687"
-      - "3000:3000"
       - "7444:7444"
     depends_on:
       - broker
-    environment:
-      - MEMGRAPH="--log-level=TRACE --telemetry-enabled=false"
-    entrypoint: [
-        "/usr/bin/supervisord"
-    ]
+    entrypoint:
+      [
+        "/usr/lib/memgraph/memgraph",
+      ]
     networks:
       - git-network
   
@@ -60,14 +58,27 @@ services:
     container_name: appcore
     volumes:
       - ./appcore:/usr/src/appcore
-    entrypoint: python3 appcore/setup.py
+    entrypoint: python3 /usr/src/appcore/setup.py
     networks:
       - git-network
     depends_on:
-      - broker
-      - zookeeper
-      - memgraph-platform
-    
+      - memgraph
+  
+  backend:
+    build: "./backend"
+    container_name: "backend"
+    volumes:
+      - ./backend:/usr/src/backend
+    ports:
+      - "5001:5000"
+    environment:
+      - MG_HOST=memgraph
+      - MG_PORT=7687
+    networks:
+      - git-network
+    depends_on:
+      - core
+
   frontend:
     build: "./frontend"
     container_name: frontend
@@ -76,19 +87,10 @@ services:
       - ./frontend/public:/app/public
       - ./frontend/styles:/app/styles
       - ./frontend/comps:/app/comps
+      - ./frontend/next.config.js:/app/next.config.js
     ports:
-      - 3001:3000
+      - "3001:3000"
     networks:
       - git-network
     depends_on:
-      - core
-  
-  backend:
-    build: "./backend"
-    container_name: "backend"
-    volumes:
-      - ./backend:/usr/src/backend
-    ports:
-      - 5000:5000
-    networks:
-      - git-network
+      - backend

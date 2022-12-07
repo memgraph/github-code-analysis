@@ -1,5 +1,3 @@
-
-
 class GitApiLimit(Exception):
     pass
 

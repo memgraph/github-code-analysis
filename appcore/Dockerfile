@@ -8,5 +8,5 @@ COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
 ENV ACCESS_TOKEN=""
-ENV PYTHONPATH=/usr/src
+ENV PYTHONPATH="${PYTHONPATH}:/usr/src"
 

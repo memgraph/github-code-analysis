@@ -13,6 +13,3 @@ class CoreKafkaProducer:
 
     def produce_db_objects(self, data: Dict):
         self._producer.send(CoreKafkaConstants.KAFKA_PRODUCER_TOPIC_NAME.value, data)
-
-    def __del__(self):
-        self._producer.close()

@@ -23,6 +23,11 @@ class AllRepositoryInformation(QueryResponseInterface):
             repo_name=repo_name,
             commit_sha=commit_sha,
         )
-        DBIngestRunner.run_filetree(filetree=filetree)
-        DBIngestRunner.run_branches_and_commits()
-        DBIngestRunner.run_finishing_methods(filename=filename, filetree=filetree[0].filename)
+        try:
+            DBIngestRunner.run_beginning_methods(filename=filename, filetree=filetree[0].filename, commit_sha=commit_sha)
+            DBIngestRunner.run_filetree(filetree=filetree)
+            DBIngestRunner.run_branches_and_commits()
+        except Exception as e:
+            print(e)
+        finally:
+            DBIngestRunner.run_finishing_methods(filename=filename, filetree=filetree[0].filename, commit_sha=commit_sha)
